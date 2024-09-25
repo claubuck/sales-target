@@ -10,28 +10,42 @@ import PrimaryButton from "@/Components/PrimaryButton.vue";
 import { nextTick, ref } from "vue";
 
 const confirmingUserDeletion = ref(false);
-const passwordInput = ref(null);
 
 const props = defineProps({
   show: Boolean,
 });
 
 const form = useForm({
-  password: "",
+  objectiveMonth: "",
+  objectiveYear: "",
+  comparisonMonth: "",
+  comparisonYear: "",
+  comparisonMonthSecondary: "",
+  comparisonYearSecondary: "",
+  period: "",
+  compare_period: "",
+  compare_period_secondary: "",
 });
 
-const confirmUserDeletion = () => {
-  confirmingUserDeletion.value = true;
-
-  nextTick(() => passwordInput.value.focus());
+// Convert month and year to 'Y-m-d H:i:s' format
+const formatDateTime = (month, year) => {
+  if (!month || !year) return null;
+  const monthIndex = months.indexOf(month) + 1;
+  const date = new Date(year, monthIndex - 1, 1); // First day of the month
+  return date.toISOString(); // Converts to 'Y-m-dTH:i:s.sssZ'
 };
 
-const deleteUser = () => {
-  form.delete(route("profile.destroy"), {
+const storeObjetive = () => {
+  form.period = formatDateTime(form.objectiveMonth, form.objectiveYear);
+  form.compare_period = formatDateTime(form.comparisonMonth, form.comparisonYear);
+  form.compare_period_secondary = formatDateTime(form.comparisonMonthSecondary, form.comparisonYearSecondary);
+
+  form.post(route("objetives.store"), {
     preserveScroll: true,
     onSuccess: () => closeModal(),
-    onError: () => passwordInput.value.focus(),
-    onFinish: () => form.reset(),
+    onError: (error) => {
+      console.log("Error",error);
+    }, // Focus on the first field on error
   });
 };
 
@@ -51,6 +65,7 @@ const months = [
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
 
+
 </script>
 
 <template>
@@ -62,9 +77,9 @@ const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
         </h2>
 
         <p class="mt-1 text-sm text-gray-600">
-          Seleccione el mes para el nuevo objetivo de venta e ingrese un porcentaje,
-          este seteo sera general para todas las marcas, luego podra modificarse
-          de forma individual.
+          Seleccione el mes para el nuevo objetivo de venta e ingrese un
+          porcentaje, este seteo sera general para todas las marcas, luego podra
+          modificarse de forma individual.
         </p>
 
         <!-- Periodo de Objetivo -->
@@ -96,6 +111,8 @@ const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
               </option>
             </select>
           </div>
+          <!-- error -->
+          <InputError :message="form.errors.period" />
         </div>
 
         <!-- Periodo de Comparación -->
@@ -127,19 +144,41 @@ const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
               </option>
             </select>
           </div>
+          <!-- error -->
+          <InputError :message="form.errors.compare_period" />
         </div>
 
-        <!-- Porcentaje -->
+        <!-- Periodo de Comparación qlik -->
         <div class="mt-6">
-          <InputLabel for="percentage" value="Porcentaje" />
-          <TextInput
-            id="percentage"
-            v-model="form.percentage"
-            type="text"
-            class="mt-1 block w-full"
-            placeholder="Ingrese el porcentaje. Ejemplo: 10"
+          <InputLabel
+            for="comparison-period-month"
+            value="Periodo de Comparación (Mes)"
           />
-          <InputError :message="form.errors.percentage" class="mt-2" />
+          <div class="mt-1 flex space-x-4">
+            <select
+              id="comparison-period-month"
+              v-model="form.comparisonMonthSecondary"
+              class="form-select mt-1 block w-1/2"
+            >
+              <option value="" disabled selected>Seleccione el mes</option>
+              <option v-for="month in months" :key="month" :value="month">
+                {{ month }}
+              </option>
+            </select>
+
+            <select
+              id="comparison-period-year"
+              v-model="form.comparisonYearSecondary"
+              class="form-select mt-1 block w-1/2"
+            >
+              <option value="" disabled selected>Seleccione el año</option>
+              <option v-for="year in years" :key="year" :value="year">
+                {{ year }}
+              </option>
+            </select>
+          </div>
+          <!-- error -->
+          <InputError :message="form.errors.compare_period_secondary" />
         </div>
 
         <div class="mt-6 flex justify-end">
@@ -149,7 +188,7 @@ const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
             class="ms-3"
             :class="{ 'opacity-25': form.processing }"
             :disabled="form.processing"
-            @click="deleteUser"
+            @click="storeObjetive"
           >
             Generar
           </PrimaryButton>

@@ -33,18 +33,6 @@
                   scope="col"
                   class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
                 >
-                  Retailer
-                </th>
-                <th
-                  scope="col"
-                  class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                >
-                  Marcas
-                </th>
-                <th
-                  scope="col"
-                  class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                >
                   Status
                 </th>
                 <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-0">
@@ -53,7 +41,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 bg-white">
-              <tr v-for="person in people" :key="person.email">
+              <tr v-for="objetive in objetives.data" :key="objetive.id">
                 <td class="whitespace-nowrap py-5 pl-4 pr-3 text-sm sm:pl-0">
                   <div class="flex items-center">
                     <!-- <div class="h-11 w-11 flex-shrink-0">
@@ -65,32 +53,26 @@
                     </div> -->
                     <div class="ml-4">
                       <div class="font-medium text-gray-900">
-                        {{ person.objetivo }}
+                        {{ formatMonthDate(objetive.period).toUpperCase() }}
                       </div>
-                      <div class="mt-1 text-gray-500">{{ person.año }}</div>
+                      <div class="mt-1 text-gray-500">
+                        {{ formatYear(objetive.period) }}
+                      </div>
                     </div>
                   </div>
                 </td>
                 <td class="whitespace-nowrap px-3 py-5 text-sm text-gray-500">
-                  <div class="text-gray-900">{{ person.retailer }}</div>
-                  <!-- <div class="mt-1 text-gray-500">{{ person.department }}</div> -->
-                </td>
-                <td class="whitespace-nowrap px-3 py-5 text-sm text-gray-500">
-                  <div class="text-gray-900">{{ person.marcas }}</div>
-                  <!-- <div class="mt-1 text-gray-500">{{ person.department }}</div> -->
-                </td>
-                <td class="whitespace-nowrap px-3 py-5 text-sm text-gray-500">
                   <span
                     class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
-                    >Activo</span
+                    >{{ objetive.status }}</span
                   >
                 </td>
                 <td
                   class="relative whitespace-nowrap py-5 pl-3 pr-4 text-right text-sm font-medium sm:pr-0"
                 >
-                <!-- Icono de Ver -->
-                <a
-                    :href="route('objetives.index')"
+                  <!-- Icono de Ver -->
+                  <a
+                    :href="route('set-objetive', objetive.id)"
                     class="text-gray-600 hover:text-gray-900"
                     aria-label="Editar"
                   >
@@ -151,102 +133,60 @@
           </table>
         </div>
       </div>
+      <!-- Paginación -->
+      <div class="py-2">
+        <Pagination
+          :currentPage="objetives.current_page"
+          :totalPages="objetives.last_page"
+          @page-changed="handlePageChange"
+        />
+      </div>
     </div>
   </div>
-  <ModalNewSalesTarget :show="modalNewSalesTarget" @close="modalNewSalesTarget = false" />
+  <ModalNewSalesTarget
+    :show="modalNewSalesTarget"
+    @close="modalNewSalesTarget = false"
+  />
 </template>
   
   <script setup>
-  import { DocumentChartBarIcon, MinusCircleIcon, PencilIcon, CloudArrowDownIcon, EyeIcon } from '@heroicons/vue/24/solid'
-  import ModalNewSalesTarget from './ModalNewSalesTarget.vue';
-  import { ref } from 'vue';
+import {
+  DocumentChartBarIcon,
+  MinusCircleIcon,
+  PencilIcon,
+  CloudArrowDownIcon,
+  EyeIcon,
+} from "@heroicons/vue/24/solid";
+import ModalNewSalesTarget from "./ModalNewSalesTarget.vue";
+import Pagination from "@/Components/Pagination.vue";
+import { ref } from "vue";
+import { router } from '@inertiajs/vue3'
+import dayjs from 'dayjs';
+import 'dayjs/locale/es';
+dayjs.locale('es');
 
-  const modalNewSalesTarget = ref(false);
-const people = [
-  {
-    objetivo: "Julio",
-    año: "2024",
-    retailer: "10",
-    marcas: "11",
-    title: "Front-end Developer",
-    department: "Optimization",
-    email: "lindsay.walton@example.com",
-    role: "Member",
-    image:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-  },
-  {
-    objetivo: "Junio",
-    año: "2024",
-    retailer: "10",
-    marcas: "11",
-    title: "Front-end Developer",
-    department: "Optimization",
-    email: "lindsay.walton@example.com",
-    role: "Member",
-    image:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-  },
-  {
-    objetivo: "Mayo",
-    año: "2024",
-    retailer: "10",
-    marcas: "11",
-    title: "Front-end Developer",
-    department: "Optimization",
-    email: "lindsay.walton@example.com",
-    role: "Member",
-    image:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-  },
-  {
-    objetivo: "Abril",
-    año: "2024",
-    retailer: "10",
-    marcas: "11",
-    title: "Front-end Developer",
-    department: "Optimization",
-    email: "lindsay.walton@example.com",
-    role: "Member",
-    image:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-  },
-  {
-    objetivo: "Marzo",
-    año: "2024",
-    retailer: "10",
-    marcas: "11",
-    title: "Front-end Developer",
-    department: "Optimization",
-    email: "lindsay.walton@example.com",
-    role: "Member",
-    image:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-  },
-  {
-    objetivo: "Enero",
-    año: "2024",
-    retailer: "10",
-    marcas: "11",
-    title: "Front-end Developer",
-    department: "Optimization",
-    email: "lindsay.walton@example.com",
-    role: "Member",
-    image:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-  },
-  {
-    objetivo: "Enero",
-    año: "2024",
-    retailer: "10",
-    marcas: "11",
-    title: "Front-end Developer",
-    department: "Optimization",
-    email: "lindsay.walton@example.com",
-    role: "Member",
-    image:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-  },
-  // More people...
-];
+const props = defineProps({
+  objetives: Object,
+});
+
+const modalNewSalesTarget = ref(false);
+
+// Función para manejar el cambio de página desde el componente Pagination
+const handlePageChange = (page) => {
+  fetchObjetives(page);
+};
+
+// Función para obtener procedimientos según la página seleccionada
+const fetchObjetives = (page) => {
+  router.get(route("dashboard", { page }));
+};
+
+const formatMonthDate = (date) => {
+  return dayjs(date).format('MMMM'); // Formato para obtener el día de la semana
+};
+
+const formatYear = (date) => {
+  return dayjs(date).format('YYYY'); // Formato para obtener el año
+};
+
 </script>

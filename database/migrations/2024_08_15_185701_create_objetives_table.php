@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('objetives', function (Blueprint $table) {
             $table->id();
+            $table->dateTime('period')->nullable();
+            $table->dateTime('compare_period')->nullable();
+            $table->dateTime('compare_period_secondary')->nullable();
+            $table->string('status')->nullable();
             $table->timestamps();
         });
     }

@@ -46,32 +46,41 @@
 </template>
   
   <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 const props = defineProps({
   activeTab: {
     type: String,
     required: true
+  },
+  brands: {
+    type: Array,
+    default: () => []
   }
 });
-
+console.log('brands',props.brands);
 const emit = defineEmits(['update:activeTab']);
 
+// Función para manejar el clic en la tab
 function handleClick(tab) {
   emit('update:activeTab', tab.name);
 }
 
-const tabs = [
-  { name: "CAROLINA HERRERA", href: "#", current: true, color: "#58d68d" }, // Azul
-  { name: "RABAN0NE", href: "#", current: false, color: "#58d68d" }, // Naranja
-  { name: "JPG", href: "#", current: false, color: "#85c1e9" }, // Verde
-  { name: "NINA RICCI", href: "#", current: false, color: "#85c1e9" }, // Azul más claro
-  { name: "BANDERAS", href: "#", current: false, color: "#a569bd" }, // Azul púrpura
-  { name: "ADOLFO DOMINGUEZ", href: "#", current: false, color: "#a569bd" }, // Rosa
-  { name: "BENETON", href: "#", current: false, color: "#a569bd" }, // Morado
-  { name: "SHAKIRA", href: "#", current: false, color: "#a569bd" }, // Rojo
-  { name: "AGATHA", href: "#", current: false, color: "#a569bd" }, // Azul oscuro
-  { name: "PACHA", href: "#", current: false, color: "#a569bd" }, // Amarillo
-  { name: "RAPSODIA", href: "#", current: false, color: "#a569bd" }, // Cian
-];
+// Mapeo de colores según el eje
+const colorMap = {
+  'EJE 1': '#58d68d',
+  'EJE 2': '#85c1e9', 
+  'EJE 3': '#a569bd',
+};
+
+// Computed para generar las tabs desde props.brands
+const tabs = computed(() => {
+  return props.brands.map(brand => ({
+    name: brand.name,
+    href: "#", // Cambia esto según sea necesario
+    current: brand.name === props.activeTab,
+    color: colorMap[brand.axis] || '#ccc' // Color predeterminado si no está en el mapa
+  }));
+});
+
 </script>
