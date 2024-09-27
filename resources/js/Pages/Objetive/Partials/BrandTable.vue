@@ -93,7 +93,7 @@
                     <td
                       class="whitespace-nowrap px-2 py-2 text-sm text-gray-500"
                     >
-                      
+                      {{ applyPercentage(selloutdata.quantity, selloutdata.quantity_secondary) }}
                     </td>
                     <td
                       class="whitespace-nowrap px-2 py-2 text-sm text-gray-500"
@@ -158,7 +158,7 @@
 
   
   <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import PercentageChangeModal from "./PercentageChangeModal.vue";
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
@@ -172,6 +172,7 @@ const props = defineProps({
 
 const showPercentajeModal = ref(false);
 const percentage = ref(props.objetive.percentages[0]?.percentage);
+const activeBrand = ref(props.brand);
 
 // Agrupar datos y calcular subtotales
 const groupedData = computed(() => {
@@ -205,5 +206,20 @@ const groupedData = computed(() => {
 
 const formatDate = (date) => {
   return dayjs(date).format('MMMM YYYY'); 
+};
+
+//aplicar porcenje
+
+const applyPercentage = (quantity, quantity_secondary) => {
+  let percentageValue = props.objetive.percentages[0]?.percentage || 0;
+  let column = props.objetive.percentages[0]?.scope;
+
+  if (column === "quantity") {
+    return parseFloat((quantity + (quantity * (percentageValue / 100))).toFixed(2));
+  } else if (column === "quantity_secondary") {
+    return parseFloat((quantity_secondary + (quantity_secondary * (percentageValue / 100))).toFixed(2));
+  } else {
+    return 0; // O un valor por defecto si no hay coincidencia
+  }
 };
 </script>
