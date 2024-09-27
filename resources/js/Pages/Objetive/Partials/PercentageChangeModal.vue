@@ -7,13 +7,11 @@ import SecondaryButton from "@/Components/SecondaryButton.vue";
 import TextInput from "@/Components/TextInput.vue";
 import { useForm } from "@inertiajs/vue3";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
-import { nextTick, ref } from "vue";
+import { nextTick, ref, watch } from "vue";
 import BrandTable from "./BrandTable.vue";
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 dayjs.locale('es');
-
-const confirmingUserDeletion = ref(false);
 
 const props = defineProps({
   show: Boolean,
@@ -22,17 +20,30 @@ const props = defineProps({
 });
 
 const form = useForm({
-  percentage: "",
+  percentage: props.objetive.percentages[0]?.percentage || 0,
   brand: props.brand,
   objetive_id: props.objetive.id,
   scope: "",
 });
 
-const savePercentage = () => {
+watch(() => props.brand, (newValue, oldValue) => {
+  form.brand = newValue;
+});
 
+watch(() => props.objetive.percentages[0]?.percentage, (newValue, oldValue) => {
+  form.percentage = newValue;
+});
+
+
+const savePercentage = () => {
+  console.log("form", form),
   form.post(route("percentage.store"), {
     preserveScroll: true,
-    onSuccess: () => closeModal(),
+    onSuccess: () =>
+    {
+      form.reset();
+      closeModal();
+    },
     onError: (error) => {
       console.log("Error",error);
     }, // Focus on the first field on error
