@@ -4,6 +4,9 @@ import TabsLink from './Partials/TabsLink.vue';
 import BrandTable from './Partials/BrandTable.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
+import dayjs from 'dayjs';
+import 'dayjs/locale/es';
+dayjs.locale('es');
 
 const props = defineProps({
     brands: Object,
@@ -30,6 +33,10 @@ function setActiveTab(tabName) {
 watch(() => props.filter, (newFilter) => {
     activeTab.value = newFilter || 'CAROLINA HERRERA';
 });
+
+const formatDate = (date) => {
+    return dayjs(date).format('MMMM');
+};
 </script>
 
 <template>
@@ -37,7 +44,7 @@ watch(() => props.filter, (newFilter) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Objetivos Julio 2024</h2>
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Objetivos de {{ formatDate(objetive.period) }} 2024</h2>
         </template>
 
         <div class="py-12">
