@@ -54,7 +54,7 @@ const showingNavigationDropdown = ref(false);
                   :href="route('products.index')"
                   :active="route().current('products.index')"
                 >
-                  Productos
+                  Reportes Sell Out Comercial
                 </NavLink>
               </div>
             </div>
