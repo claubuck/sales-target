@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         // Brand Seeder
         $this->call(BrandSeeder::class);
+        $this->call(EquivalenceDoorsSeeder::class);
         // User::factory(10)->create();
 
         User::factory()->create([
