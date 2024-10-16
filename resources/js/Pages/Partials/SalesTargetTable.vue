@@ -84,7 +84,7 @@
 
                   <!-- Icono de Editar -->
                   <a
-                    href="#"
+                    :href="route('set-objetive', objetive.id)"
                     class="text-indigo-600 hover:text-indigo-900"
                     aria-label="Editar"
                   >
@@ -96,7 +96,7 @@
 
                   <!-- Icono de Eliminar -->
                   <a
-                    href="#"
+                    :href="route('objetives.destroy', objetive.id)"
                     class="text-red-600 hover:text-red-900"
                     aria-label="Eliminar"
                   >
@@ -107,20 +107,20 @@
                   <span class="mx-2"></span>
 
                   <!-- Icono de Exportar a Excel -->
-                  <a
+                  <!-- <a
                     href="#"
                     class="text-green-600 hover:text-green-900"
                     aria-label="Exportar a Excel"
                   >
                     <DocumentChartBarIcon class="w-5 h-5 inline" />
-                  </a>
+                  </a> -->
 
                   <!-- Espacio entre íconos -->
                   <span class="mx-2"></span>
 
                   <!-- Icono de Generar con Excel -->
                   <a
-                    href="#"
+                    :href="route('soapp.export', objetive.id)"
                     class="text-blue-600 hover:text-blue-900"
                     aria-label="Generar con Excel"
                   >
