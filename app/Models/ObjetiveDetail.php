@@ -16,6 +16,7 @@ class ObjetiveDetail extends Model
         'client',
         'quantity',
         'quantity_secondary',
+        'quantity_with_percentage',
         'percentage',
         'price',
     ];

@@ -51,8 +51,8 @@ const showingNavigationDropdown = ref(false);
                   Precio Ponderado
                 </NavLink>
                 <NavLink
-                  :href="route('products.index')"
-                  :active="route().current('products.index')"
+                  :href="route('sellout.comercial')"
+                  :active="route().current('sellout.comercial')"
                 >
                   Reportes Sell Out Comercial
                 </NavLink>

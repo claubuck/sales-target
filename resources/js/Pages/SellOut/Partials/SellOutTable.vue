@@ -35,9 +35,9 @@
                 >
                   Fecha de carga
                 </th>
-                <!-- <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-0">
-                  <span class="sr-only">Edit</span>
-                </th> -->
+                <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-0">
+                  <span class="sr-only">Acciones</span>
+                </th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
@@ -45,7 +45,8 @@
                 <td
                   class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0"
                 >
-                  {{ formatMonthDate(sellout.period).toLocaleUpperCase() }} {{ formatYear(sellout.period) }}
+                  {{ formatMonthDate(sellout.period).toLocaleUpperCase() }}
+                  {{ formatYear(sellout.period) }}
                 </td>
                 <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                   {{ formatDate(sellout.created_at) }}
@@ -53,9 +54,12 @@
                 <td
                   class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0"
                 >
-                  <!-- <a href="#" class="text-indigo-600 hover:text-indigo-900"
-                    >Edit<span class="sr-only">, {{ person.name }}</span></a
-                  > -->
+                  <button
+                    @click="openDeleteModal(sellout.id)"
+                    class="text-red-600 hover:text-red-900"
+                  >
+                    <TrashIcon class="h-5 w-5" />
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -67,30 +71,64 @@
   <ModalSellOutImport
     :show="modalSellOutImport"
     @close="modalSellOutImport = false"
+    :type="type"
+  />
+  <ConfirmedModal
+    :open="showDeleteModal"
+    @close="showDeleteModal = false"
+    @confirm="confirmDelete"
   />
 </template>
     
     <script setup>
-import { ref } from "vue";
+import { onErrorCaptured, ref } from "vue";
 import ModalSellOutImport from "./ModalSellOutImport.vue";
-import dayjs from 'dayjs';
-import 'dayjs/locale/es';
-dayjs.locale('es');
+import { TrashIcon } from "@heroicons/vue/24/outline";
+import ConfirmedModal from "@/Components/ConfirmedModal.vue";
+import { router } from '@inertiajs/vue3';
+import dayjs from "dayjs";
+import "dayjs/locale/es";
+dayjs.locale("es");
 
 const props = defineProps({
   sellouts: Array,
+  type: String,
 });
 const modalSellOutImport = ref(false);
+const showDeleteModal = ref(false);
+const selloutIdToDelete = ref(null);
 
 const formatMonthDate = (date) => {
-  return dayjs(date).format('MMMM'); // Formato para obtener el día de la semana
+  return dayjs(date).format("MMMM"); // Formato para obtener el día de la semana
 };
 
 const formatYear = (date) => {
-  return dayjs(date).format('YYYY'); // Formato para obtener el año
+  return dayjs(date).format("YYYY"); // Formato para obtener el año
 };
 
 const formatDate = (date) => {
-  return dayjs(date).format('DD-MM-YYYY'); // Formato para obtener la fecha
+  return dayjs(date).format("DD-MM-YYYY"); // Formato para obtener la fecha
+};
+
+// Abrir el modal y guardar el ID a eliminar
+const openDeleteModal = (id) => {
+  selloutIdToDelete.value = id;
+  showDeleteModal.value = true;
+  
+};
+
+const confirmDelete = () => {
+  router.delete(route("sellout.destroy", {id : selloutIdToDelete.value}), {
+    preserveScroll: true,
+    onStart: () => {
+      showDeleteModal.value = false;
+    },
+    onSuccess: () => {
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+ 
 };
 </script>

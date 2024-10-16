@@ -17,8 +17,10 @@ class SellOutController extends Controller
      */
     public function index()
     {
+        $sellOuts = SellOut::where('type', 'sellout')->get();
+
         return Inertia::render('SellOut/Index', [
-            'sellouts' => SellOut::all(),
+            'sellouts' => $sellOuts,
         ]);
     }
 
@@ -65,9 +67,11 @@ class SellOutController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(SellOut $sellOut)
+    public function destroy($id)
     {
-        //
-    }
+        $sellOut = SellOut::find($id);
+        $sellOut->delete();
 
+        return redirect()->back()->with('success', 'Registro eliminado correctamente');
+    }
 }

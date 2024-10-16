@@ -13,6 +13,7 @@ class Objetive extends Model
         'period',   
         'compare_period',
         'compare_period_secondary',
+        'comparison_period', //Periodo de comparación seleccionado
         'status',
     ];
 

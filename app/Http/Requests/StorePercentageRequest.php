@@ -25,7 +25,6 @@ class StorePercentageRequest extends FormRequest
             'objetive_id' => 'required|integer',
             'brand' => 'required|string',
             'percentage' => 'required|numeric',
-            'scope' => 'required|string',
         ];
     }
 
@@ -47,8 +46,6 @@ class StorePercentageRequest extends FormRequest
             'percentage.required' => 'El campo porcentaje es requerido',
             'percentage.numeric' => 'El campo porcentaje debe ser un número',
 
-            'scope.required' => 'El campo alcance es requerido',
-            'scope.string' => 'El campo alcance debe ser una cadena de texto',
         ];
     }
 }

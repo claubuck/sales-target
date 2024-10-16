@@ -8,18 +8,21 @@ import Modal from "@/Components/Modal.vue";
 import SecondaryButton from "@/Components/SecondaryButton.vue";
 import TextInput from "@/Components/TextInput.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
+import Spinner from "@/Components/Spinner.vue";
 
 const props = defineProps({
   show: Boolean,
+  type: String,
 });
 
 const emit = defineEmits(["close"]);
+const isLoading = ref(false);
 
 const form = useForm({
   file: null,
   month: null,
   year: null,
-  type: "sellout",
+  type: props.type,
 });
 
 // Función para manejar el cierre del modal
@@ -41,9 +44,24 @@ const importFile = () => {
     return;
   }
 
+  // Determina el nombre de la ruta según el valor de props.type
+  let routeName = null;
+  if (props.type === "sellout") {
+    routeName = "sellout.import";
+  } else if (props.type === "sellout_commercial") {
+    routeName = "sellout.import.commercial";
+  } else {
+    alert("Tipo de importación no válido.");
+    return;
+  }
 
-  form.post("/sellout/import", {
+  form.post(route(routeName), {
+    preserveScroll: true,
+    onStart: () => {
+      isLoading.value = true;
+    },
     onFinish: () => {
+      isLoading.value = false;
       closeModal();
     },
     onError: () => {
@@ -57,12 +75,24 @@ const importFile = () => {
 };
 
 const months = [
-  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
 ];
 
-const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i); // Últimos 10 años
-
+const years = Array.from(
+  { length: 10 },
+  (_, i) => new Date().getFullYear() - i
+); // Últimos 10 años
 </script>
 
 
@@ -75,7 +105,9 @@ const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i)
         </h2>
 
         <p class="mt-1 text-sm text-gray-600">
-          Se debe seleccionar el periodo y un archivo CSV con el reporte Sell Out. Solo se tomaran los datos que correspondan al periodo seleccionado.
+          Se debe seleccionar el periodo y un archivo CSV con el reporte Sell
+          Out. Solo se tomaran los datos que correspondan al periodo
+          seleccionado.
         </p>
 
         <form
@@ -145,6 +177,8 @@ const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i)
             </PrimaryButton>
           </div>
         </form>
+        <!-- Spinner centrado -->
+        <Spinner v-if="isLoading" text="Extrayendo información por favor aguarde..." />
       </div>
     </Modal>
   </section>

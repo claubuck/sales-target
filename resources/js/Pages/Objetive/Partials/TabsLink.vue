@@ -14,7 +14,7 @@
     </div>
     <div class="hidden sm:block">
       <nav
-        class="isolate flex divide-x divide-gray-200 rounded-lg shadow"
+        class="isolate flex divide-x divide-gray-200 rounded-lg shadow z-50"
         aria-label="Tabs"
       >
         <a
@@ -46,41 +46,49 @@
 </template>
   
   <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed } from "vue";
 
 const props = defineProps({
   activeTab: {
     type: String,
-    required: true
+    required: true,
   },
   brands: {
     type: Array,
-    default: () => []
-  }
+    default: () => [],
+  },
 });
-console.log('brands',props.brands);
-const emit = defineEmits(['update:activeTab']);
+console.log("brands", props.brands);
+const emit = defineEmits(["update:activeTab"]);
 
 // Función para manejar el clic en la tab
 function handleClick(tab) {
-  emit('update:activeTab', tab.name);
+  emit("update:activeTab", tab.name);
 }
 
 // Mapeo de colores según el eje
 const colorMap = {
-  'EJE 1': '#58d68d',
-  'EJE 2': '#85c1e9', 
-  'EJE 3': '#a569bd',
+  "EJE 1": "#58d68d",
+  "EJE 2": "#85c1e9",
+  "EJE 3": "#a569bd",
 };
 
 // Computed para generar las tabs desde props.brands
 const tabs = computed(() => {
-  return props.brands.map(brand => ({
-    name: brand.name,
-    href: "#", // Cambia esto según sea necesario
-    current: brand.name === props.activeTab,
-    color: colorMap[brand.axis] || '#ccc' // Color predeterminado si no está en el mapa
-  }));
+  // Se agrega la opción "Todos" al final del array
+  return [
+    ...props.brands.map((brand) => ({
+      name: brand.name,
+      href: "#", // Cambia esto según sea necesario
+      current: brand.name === props.activeTab,
+      color: colorMap[brand.axis] || "#ccc", // Color predeterminado si no está en el mapa
+    })),
+    {
+      name: "TODOS",
+      href: "#",
+      current: props.activeTab === "TODOS",
+      color: "#d6dbdf", // Color fijo para "Todos"
+    },
+  ];
 });
-
 </script>

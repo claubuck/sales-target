@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Percentage;
+use Illuminate\Http\Request;
 use App\Models\SellOutDetail;
 use App\Http\Requests\StoreSellOutDetailRequest;
 use App\Http\Requests\UpdateSellOutDetailRequest;
@@ -63,4 +65,5 @@ class SellOutDetailController extends Controller
     {
         //
     }
+
 }

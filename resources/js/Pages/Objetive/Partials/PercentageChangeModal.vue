@@ -7,11 +7,11 @@ import SecondaryButton from "@/Components/SecondaryButton.vue";
 import TextInput from "@/Components/TextInput.vue";
 import { useForm } from "@inertiajs/vue3";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
+import Spinner from "@/Components/Spinner.vue";
 import { nextTick, ref, watch } from "vue";
-import BrandTable from "./BrandTable.vue";
-import dayjs from 'dayjs';
-import 'dayjs/locale/es';
-dayjs.locale('es');
+import dayjs from "dayjs";
+import "dayjs/locale/es";
+dayjs.locale("es");
 
 const props = defineProps({
   show: Boolean,
@@ -19,33 +19,40 @@ const props = defineProps({
   brand: String,
 });
 
+const isLoading = ref(false);
+
 const form = useForm({
-  percentage: props.objetive.percentages[0]?.percentage || 0,
+  percentage: props.objetive.percentages[0]?.percentage,
   brand: props.brand,
   objetive_id: props.objetive.id,
-  scope: "",
 });
 
-watch(() => props.brand, (newValue, oldValue) => {
-  form.brand = newValue;
-});
+watch(
+  () => props.brand,
+  (newValue, oldValue) => {
+    form.brand = newValue;
+  }
+);
 
-watch(() => props.objetive.percentages[0]?.percentage, (newValue, oldValue) => {
-  form.percentage = newValue;
-});
-
+watch(
+  () => props.objetive.percentages,
+  (newValue) => {
+    form.percentage = newValue[0]?.percentage || 0;
+  },
+  { immediate: true }
+);
 
 const savePercentage = () => {
-  console.log("form", form),
+  console.log("form", form), (isLoading.value = true);
   form.post(route("percentage.store"), {
     preserveScroll: true,
-    onSuccess: () =>
-    {
+    onSuccess: () => {
+      isLoading.value = false;
       form.reset();
       closeModal();
     },
     onError: (error) => {
-      console.log("Error",error);
+      console.log("Error", error);
     }, // Focus on the first field on error
   });
 };
@@ -59,41 +66,19 @@ const closeModal = () => {
 };
 
 const formatDate = (date) => {
-  return dayjs(date).format('MMMM YYYY'); 
+  return dayjs(date).format("MMMM YYYY");
 };
-
-// Lista de columnas con valor y texto
-const columns = [
-  { value: "quantity", text: formatDate(props.objetive.compare_period) },
-  { value: "quantity_secondary", text: formatDate(props.objetive.compare_period_secondary) },
-];
-
 </script>
 
 <template>
   <section class="space-y-6">
     <Modal :show="show" @close="closeModal">
       <div class="p-6">
-        <h2 class="text-lg font-medium text-gray-900">
-          Porcentaje
-        </h2>
+        <h2 class="text-lg font-medium text-gray-900">Porcentaje</h2>
 
         <p class="mt-1 text-sm text-gray-600">
           Editar el porcentaje para {{ brand }}
         </p>
-
-        <div class="mt-4">
-          <InputLabel for="selectedColumn" value="Seleccionar un periodo" />
-          <select
-            id="selectedColumn"
-            v-model="form.scope"
-            class="mt-1 block w-full border-gray-300 rounded-md"
-          >
-            <option value="" disabled>Selecciona un perido</option>
-            <option v-for="column in columns" :key="column" :value="column.value">{{ column.text }}</option>
-          </select>
-          <InputError :message="form.errors.scope" class="mt-2" />
-        </div>
 
         <div class="mt-4">
           <InputLabel for="percentage" value="Porcentaje" />
@@ -104,7 +89,7 @@ const columns = [
             class="mt-1 block w-full"
             placeholder="Ingresa el porcentaje"
           />
-          <InputError :message=form.errors.percentage class="mt-2" />
+          <InputError :message="form.errors.percentage" class="mt-2" />
         </div>
 
         <div class="mt-6 flex justify-end">
@@ -119,6 +104,10 @@ const columns = [
             Guardar
           </PrimaryButton>
         </div>
+        
+        <!-- Spinner centrado -->
+        <Spinner v-if="isLoading" text="Aplicando Porcentajes..." />
+
       </div>
     </Modal>
   </section>

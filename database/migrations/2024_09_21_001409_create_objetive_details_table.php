@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('client');
             $table->integer('quantity')->nullable();
             $table->integer('quantity_secondary')->nullable();
+            $table->integer('quantity_with_percentage')->nullable();
             $table->string('percentage')->nullable();
             $table->string('price')->nullable();
             $table->timestamps();

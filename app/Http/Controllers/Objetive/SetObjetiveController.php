@@ -32,7 +32,13 @@ class SetObjetiveController extends Controller
             $query->where('brand', $filter);
         }]);
 
-        $sellOut = $this->getSellOut($objetive, $filter);
+        if($filter == 'TODOS'){
+            $sellOut = $this->getSellOutAllBrands($objetive);
+        } else {
+            $sellOut = $this->getSellOut($objetive, $filter);
+        }
+
+        
 
         return Inertia::render('Objetive/Index', [
             'brands' => $brands,
@@ -46,6 +52,15 @@ class SetObjetiveController extends Controller
     {
         $objetiveDetails = $objetive->objetiveDetails()
             ->where('brand', $filter)
+            ->orderBy('client', 'desc')
+            ->get();
+
+        return $objetiveDetails;
+    }
+
+    public function getSellOutAllBrands($objetive)
+    {
+        $objetiveDetails = $objetive->objetiveDetails()
             ->orderBy('client', 'desc')
             ->get();
 
