@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Percentage;
+use Illuminate\Http\Request;
+use App\Models\SellOutDetail;
 use App\Models\ObjetiveDetail;
 use App\Http\Requests\StoreObjetiveDetailRequest;
 use App\Http\Requests\UpdateObjetiveDetailRequest;
@@ -62,5 +65,27 @@ class ObjetiveDetailController extends Controller
     public function destroy(ObjetiveDetail $objetiveDetail)
     {
         //
+    }
+    
+    public function editQuantity(Request $request)
+    {
+        $objetiveDetail = ObjetiveDetail::find($request->sellout_detail_id);
+        $objetiveId = $objetiveDetail->objetive_id;
+        $field = $request->field;
+        $percentage = $this->getPercentage($objetiveId, $objetiveDetail->brand);
+
+        $objetiveDetail->$field = $request->quantity;
+        $objetiveDetail->quantity_with_percentage =  $request->quantity + ($request->quantity * $percentage / 100);
+        $objetiveDetail->save();
+
+        return redirect()->back()->with('success', 'Cantidad actualizada correctamente');
+    }
+
+    public function getPercentage($objetiveId, $brand)
+    {
+        $percentage = Percentage::where('objetive_id', $objetiveId)
+            ->where('brand', $brand)
+            ->first();
+        return $percentage->percentage;
     }
 }

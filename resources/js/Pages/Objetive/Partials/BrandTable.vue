@@ -6,7 +6,9 @@
           Objetivos de venta
         </h1>
         <div class="flex items-center mt-2">
-          <p class="text-sm text-gray-700">Porcentaje seteado {{ objetive.percentages[0]?.percentage ?? 0 }}%</p>
+          <p class="text-sm text-gray-700">
+            Porcentaje seteado {{ objetive.percentages[0]?.percentage ?? 0 }}%
+          </p>
           <button
             @click="showPercentajeModal = true"
             type="button"
@@ -14,15 +16,41 @@
           >
             Cambiar
           </button>
+
+          <!-- Mostrar totales dentro del div -->
+          <div class="mt-4 ml-8">
+            <p class="text-sm font-bold text-gray-900">
+              Total Unidades de
+              {{
+                showColumnComparePeriod
+                  ? formatDate(objetive.compare_period)
+                  : formatDate(objetive.compare_period_secondary)
+              }}
+              : {{ totalQuantity }}
+            </p>
+            <p class="text-sm font-bold text-gray-900">
+              Total Unidades de {{ formatDate(objetive.period) }} :
+              {{ totalQuantityPeriod }}
+            </p>
+            <p class="text-sm font-bold text-gray-900">
+              Total Pesos: ${{ totalPrice }}
+            </p>
+
+            <!-- Variación porcentual -->
+            <div class="flex items-center mt-2">
+              <p class="text-sm font-bold text-gray-900">
+                Variación porcentual: {{ percentageChange.toFixed(2) }}%
+              </p>
+              <span v-if="percentageChange > 0" class="text-green-600 ml-2"
+                >↑</span
+              >
+              <span v-if="percentageChange < 0" class="text-red-600 ml-2"
+                >↓</span
+              >
+              <span v-if="percentageChange === 0" class="ml-2">→</span>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-        <button
-          type="button"
-          class="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
-        >
-          Exportar
-        </button>
       </div>
     </div>
     <div class="mt-8 flow-root">
@@ -42,11 +70,13 @@
                   PDV
                 </th>
                 <th
+                  v-if="showColumnComparePeriod"
                   class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900"
                 >
-                  Unidades {{ formatDate(objetive.compare_period) }}
+                  Unidades {{ formatDate(objetive.compare_period) }} (ST)
                 </th>
                 <th
+                  v-if="showColumnComparePeriodSecondary"
                   class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900"
                 >
                   Unidades {{ formatDate(objetive.compare_period_secondary) }}
@@ -81,19 +111,45 @@
                       {{ selloutdata.point_of_sale }}
                     </td>
                     <td
+                      v-if="showColumnComparePeriod"
                       class="whitespace-nowrap px-2 py-2 text-sm text-gray-500"
                     >
-                      {{ selloutdata.quantity }}
+                      <a
+                        href="#"
+                        @click.prevent="
+                          openEditQuantityModal(
+                            selloutdata.id,
+                            selloutdata.quantity,
+                            'quantity'
+                          )
+                        "
+                        class="text-indigo-600 hover:underline"
+                      >
+                        {{ selloutdata.quantity }}
+                      </a>
                     </td>
                     <td
+                      v-if="showColumnComparePeriodSecondary"
                       class="whitespace-nowrap px-2 py-2 text-sm text-gray-500"
                     >
+                    <a
+                        href="#"
+                        @click.prevent="
+                          openEditQuantityModal(
+                            selloutdata.id,
+                            selloutdata.quantity,
+                            'quantity_secondary'
+                          )
+                        "
+                        class="text-indigo-600 hover:underline"
+                      >
                       {{ selloutdata.quantity_secondary }}
+                    </a>
                     </td>
                     <td
                       class="whitespace-nowrap px-2 py-2 text-sm text-gray-500"
                     >
-                      {{ applyPercentage(selloutdata.quantity, selloutdata.quantity_secondary) }}
+                      {{ selloutdata.quantity_with_percentage }}
                     </td>
                     <td
                       class="whitespace-nowrap px-2 py-2 text-sm text-gray-500"
@@ -102,13 +158,21 @@
                     </td>
                   </tr>
                 </template>
-                <tr class="font-bold">
+                <tr class="font-bold bg-yellow-200">
                   <td colspan="2" class="text-gray-900">
                     Subtotal {{ client }}
                   </td>
-                  <td class="text-gray-900">{{ group.totalQuantity }}</td>
-                  <td class="text-gray-900">
+                  <td v-if="showColumnComparePeriod" class="text-gray-900">
+                    {{ group.totalQuantity }}
+                  </td>
+                  <td
+                    v-if="showColumnComparePeriodSecondary"
+                    class="text-gray-900"
+                  >
                     {{ group.totalSecondaryQuantity }}
+                  </td>
+                  <td class="text-gray-900">
+                    {{ group.totalQuantityWithPercentage }}
                   </td>
                   <td class="text-gray-900">
                     ${{ group.totalPrice.toFixed(2) }}
@@ -118,7 +182,7 @@
 
               <tr class="font-bold">
                 <td colspan="2" class="text-gray-900">Total SO</td>
-                <td class="text-gray-900">
+                <td v-if="showColumnComparePeriod" class="text-gray-900">
                   {{
                     Object.values(groupedData).reduce(
                       (acc, group) => acc + group.totalQuantity,
@@ -126,10 +190,21 @@
                     )
                   }}
                 </td>
-                <td class="text-gray-900">
+                <td
+                  v-if="showColumnComparePeriodSecondary"
+                  class="text-gray-900"
+                >
                   {{
                     Object.values(groupedData).reduce(
                       (acc, group) => acc + group.totalSecondaryQuantity,
+                      0
+                    )
+                  }}
+                </td>
+                <td class="text-gray-900">
+                  {{
+                    Object.values(groupedData).reduce(
+                      (acc, group) => acc + group.totalQuantityWithPercentage,
                       0
                     )
                   }}
@@ -154,15 +229,24 @@
     :objetive="objetive"
     :brand="brand"
   />
+
+  <EditQuantityModal
+    :show="showEditQuantityModal"
+    @close="showEditQuantityModal = false"
+    :id="selectedSelloutId"
+    :quantity="selectedSelloutQuantity"
+    :field="selectedField"
+  />
 </template>
 
   
   <script setup>
 import { computed, ref, watch } from "vue";
 import PercentageChangeModal from "./PercentageChangeModal.vue";
-import dayjs from 'dayjs';
-import 'dayjs/locale/es';
-dayjs.locale('es');
+import EditQuantityModal from "./EditQuantityModal.vue";
+import dayjs from "dayjs";
+import "dayjs/locale/es";
+dayjs.locale("es");
 
 const props = defineProps({
   sellout: Object,
@@ -173,6 +257,10 @@ const props = defineProps({
 const showPercentajeModal = ref(false);
 const percentage = ref(props.objetive.percentages[0]?.percentage);
 const activeBrand = ref(props.brand);
+const showEditQuantityModal = ref(false);
+const selectedSelloutId = ref(null);
+const selectedSelloutQuantity = ref(null);
+const selectedField = ref(null);
 
 // Agrupar datos y calcular subtotales
 const groupedData = computed(() => {
@@ -183,6 +271,7 @@ const groupedData = computed(() => {
       groups[data.client] = {
         totalQuantity: 0,
         totalSecondaryQuantity: 0,
+        totalQuantityWithPercentage: 0,
         totalPrice: 0,
         items: [],
       };
@@ -190,6 +279,9 @@ const groupedData = computed(() => {
     groups[data.client].totalQuantity += Number(data.quantity);
     groups[data.client].totalSecondaryQuantity += Number(
       data.quantity_secondary
+    );
+    groups[data.client].totalQuantityWithPercentage += Number(
+      data.quantity_with_percentage
     );
     // Validar y procesar el precio
     if (data.price) {
@@ -205,21 +297,70 @@ const groupedData = computed(() => {
 });
 
 const formatDate = (date) => {
-  return dayjs(date).format('MMMM YYYY'); 
+  return dayjs(date).format("MMMM YYYY");
 };
 
-//aplicar porcenje
+// Mostrar columna si los periodos coinciden o si comparison_period es null
+const showColumnComparePeriod = computed(() => {
+  const comparePeriod = dayjs(props.objetive.compare_period).format("YYYY-MM");
+  const comparisonPeriod = props.objetive.comparison_period
+    ? dayjs(props.objetive.comparison_period).format("YYYY-MM")
+    : null;
 
-const applyPercentage = (quantity, quantity_secondary) => {
-  let percentageValue = props.objetive.percentages[0]?.percentage || 0;
-  let column = props.objetive.percentages[0]?.scope;
+  return comparisonPeriod === null || comparePeriod === comparisonPeriod;
+});
 
-  if (column === "quantity") {
-    return parseFloat((quantity + (quantity * (percentageValue / 100))).toFixed(2));
-  } else if (column === "quantity_secondary") {
-    return parseFloat((quantity_secondary + (quantity_secondary * (percentageValue / 100))).toFixed(2));
-  } else {
-    return 0; // O un valor por defecto si no hay coincidencia
+// Mostrar columna secundaria si los periodos coinciden o si comparison_period es null
+const showColumnComparePeriodSecondary = computed(() => {
+  const comparePeriodSecondary = dayjs(
+    props.objetive.compare_period_secondary
+  ).format("YYYY-MM");
+  const comparisonPeriod = props.objetive.comparison_period
+    ? dayjs(props.objetive.comparison_period).format("YYYY-MM")
+    : null;
+
+  return (
+    comparisonPeriod === null || comparePeriodSecondary === comparisonPeriod
+  );
+});
+
+// Cálculo de los totales globales
+const totalQuantity = computed(() => {
+  return Object.values(groupedData.value).reduce(
+    (acc, group) => acc + group.totalQuantity,
+    0
+  );
+});
+
+const totalQuantityPeriod = computed(() => {
+  return Object.values(groupedData.value).reduce(
+    (acc, group) => acc + group.totalQuantityWithPercentage,
+    0
+  );
+});
+
+const totalPrice = computed(() => {
+  return Object.values(groupedData.value)
+    .reduce((acc, group) => acc + group.totalPrice, 0)
+    .toFixed(2);
+});
+
+// Inicializa percentageChange
+const percentageChange = computed(() => {
+  if (totalQuantityPeriod.value === 0) {
+    return 0; // Evita dividir por cero
   }
+  return (
+    ((totalQuantityPeriod.value - totalQuantity.value) / totalQuantity.value) *
+    100
+  );
+});
+
+// Función para abrir el modal de edición de cantidad
+const openEditQuantityModal = (id, quantity, field) => {
+  selectedSelloutId.value = id;
+  selectedSelloutQuantity.value = quantity;
+  selectedField.value = field;
+  showEditQuantityModal.value = true;
 };
 </script>
