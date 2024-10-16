@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { useForm } from "@inertiajs/vue3";
 import DangerButton from "@/Components/DangerButton.vue";
 import InputError from "@/Components/InputError.vue";
@@ -17,8 +17,13 @@ const props = defineProps({
 const emit = defineEmits(["close"]);
 
 const form = useForm({
-  weighted_price: parseFloat(props.brand?.weighted_price) || null,
+  weighted_price: null,
 });
+
+// Actualiza el valor de `weighted_price` cuando `props.brand` cambie
+watch(() => props.brand, (newBrand) => {
+  form.weighted_price = parseFloat(newBrand?.weighted_price).toFixed(2) || '0.00';
+}, { immediate: true });
 
 // Función para manejar el cierre del modal
 const closeModal = () => {
