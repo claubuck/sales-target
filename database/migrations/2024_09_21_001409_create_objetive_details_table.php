@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('objetive_details', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(\App\Models\Objetive::class);
+            $table->foreignIdFor(\App\Models\Objetive::class)->constrained()->cascadeOnDelete();
             $table->string('brand');
             $table->string('point_of_sale');
             $table->string('client');
