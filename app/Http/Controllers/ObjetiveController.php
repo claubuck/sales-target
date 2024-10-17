@@ -100,7 +100,9 @@ class ObjetiveController extends Controller
      */
     public function destroy(Objetive $objetive)
     {
-        //
+        $objetive->delete();
+
+        return redirect()->back()->with('success', 'Objetivo eliminado correctamente');
     }
 
     public function validatePeriod(Request $request)
