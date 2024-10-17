@@ -95,13 +95,13 @@
                   <span class="mx-2"></span>
 
                   <!-- Icono de Eliminar -->
-                  <a
-                    :href="route('objetives.destroy', objetive.id)"
+                  <button
+                    @click="openDeleteModal(objetive.id)"
                     class="text-red-600 hover:text-red-900"
                     aria-label="Eliminar"
                   >
                     <MinusCircleIcon class="w-5 h-5 inline" />
-                  </a>
+                  </button>
 
                   <!-- Espacio entre íconos -->
                   <span class="mx-2"></span>
@@ -147,6 +147,11 @@
     :show="modalNewSalesTarget"
     @close="modalNewSalesTarget = false"
   />
+  <ConfirmedModal
+    :open="showDeleteModal"
+    @close="showDeleteModal = false"
+    @confirm="confirmDelete"
+  />
 </template>
   
   <script setup>
@@ -159,6 +164,7 @@ import {
 } from "@heroicons/vue/24/solid";
 import ModalNewSalesTarget from "./ModalNewSalesTarget.vue";
 import Pagination from "@/Components/Pagination.vue";
+import ConfirmedModal from "@/Components/ConfirmedModal.vue";
 import { ref } from "vue";
 import { router } from '@inertiajs/vue3'
 import dayjs from 'dayjs';
@@ -170,6 +176,8 @@ const props = defineProps({
 });
 
 const modalNewSalesTarget = ref(false);
+const showDeleteModal = ref(false);
+const selloutIdToDelete = ref(null);
 
 // Función para manejar el cambio de página desde el componente Pagination
 const handlePageChange = (page) => {
@@ -189,4 +197,25 @@ const formatYear = (date) => {
   return dayjs(date).format('YYYY'); // Formato para obtener el año
 };
 
+// Abrir el modal y guardar el ID a eliminar
+const openDeleteModal = (id) => {
+  selloutIdToDelete.value = id;
+  showDeleteModal.value = true;
+  
+};
+
+const confirmDelete = () => {
+  router.delete(route("objetives.destroy", {id : selloutIdToDelete.value}), {
+    preserveScroll: true,
+    onStart: () => {
+      showDeleteModal.value = false;
+    },
+    onSuccess: () => {
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+ 
+};
 </script>
