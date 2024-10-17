@@ -12,6 +12,8 @@ class NormalizeSellOutService
         $sellOut1 = SellOut::find(1);
         $sellOut2 = SellOut::find(2);
 
+        $this->saveObjetiveSelloutType($sellOut1, $sellOut2, $objetive);
+
         $sellOutDetail1 = $sellOut1->sellOutDetails;
         $sellOutDetail2 = $sellOut2->sellOutDetails;
 
@@ -67,5 +69,14 @@ class NormalizeSellOutService
                 'quantity_secondary' => $detail['quantity2'],
             ]);
         }
+    }
+
+    public function saveObjetiveSelloutType($sellOut1, $sellOut2, $objetive)
+    {
+        $objetive->compare_period_sellout_type = $sellOut1->type;
+        $objetive->compare_period_secondary_sellout_type = $sellOut2->type;
+        $objetive->save();
+
+        return $objetive;
     }
 }

@@ -15,7 +15,9 @@ return new class extends Migration
             $table->id();
             $table->dateTime('period')->nullable();
             $table->dateTime('compare_period')->nullable();
+            $table->string('compare_period_sellout_type')->nullable();
             $table->dateTime('compare_period_secondary')->nullable();
+            $table->string('compare_period_secondary_sellout_type')->nullable();
             $table->date('comparison_period')->nullable(); //Periodo de comparación seleccionado
             $table->string('status')->nullable();
             $table->timestamps();

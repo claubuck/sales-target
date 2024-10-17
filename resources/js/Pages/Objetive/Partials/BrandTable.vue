@@ -73,13 +73,13 @@
                   v-if="showColumnComparePeriod"
                   class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900"
                 >
-                  Unidades {{ formatDate(objetive.compare_period) }} (ST)
+                  Unidades {{ formatDate(objetive.compare_period) }} {{objetive.compare_period_sellout_type == 'sellout' ? '(ST)': ''}}
                 </th>
                 <th
                   v-if="showColumnComparePeriodSecondary"
                   class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900"
                 >
-                  Unidades {{ formatDate(objetive.compare_period_secondary) }}
+                  Unidades {{ formatDate(objetive.compare_period_secondary) }} {{objetive.compare_period_secondary_sellout_type == 'sellout' ? '(ST)': ''}}
                 </th>
                 <th
                   class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900"
