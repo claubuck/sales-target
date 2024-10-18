@@ -3,10 +3,10 @@
     <div class="sm:flex sm:items-center">
       <div class="sm:flex-auto">
         <h1 class="text-base font-semibold leading-6 text-gray-900">
-          Ventas por Marca
+          Objetivos de Ventas por Marca
         </h1>
         <p class="mt-2 text-sm text-gray-700">
-          Listado de ventas agrupadas por cliente, mostrando la cantidad y el
+          Listado de objetivos de ventas agrupados por cliente, mostrando la cantidad y el
           total por punto de venta.
         </p>
       </div>
