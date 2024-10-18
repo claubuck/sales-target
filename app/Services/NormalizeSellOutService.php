@@ -4,13 +4,16 @@ namespace App\Services;
 
 use App\Models\SellOut;
 use App\Models\ObjetiveDetail;
+use Carbon\Carbon;
 
 class NormalizeSellOutService
 {
     public function normalizeSellOut($comparePeriod, $comparePeriodSecondary, $objetive)
     {
-        $sellOut1 = SellOut::find(1);
-        $sellOut2 = SellOut::find(2);
+        $sellOut1 = SellOut::whereMonth('period', Carbon::parse($comparePeriod)->format('m'))
+            ->whereYear('period', Carbon::parse($comparePeriod)->format('Y'))->first();
+        $sellOut2 = SellOut::whereMonth('period', Carbon::parse($comparePeriodSecondary)->format('m'))
+            ->whereYear('period', Carbon::parse($comparePeriodSecondary)->format('Y'))->first();
 
         $this->saveObjetiveSelloutType($sellOut1, $sellOut2, $objetive);
 
@@ -45,7 +48,7 @@ class NormalizeSellOutService
                     'brand' => $detail->brand,
                     'point_of_sale' => $detail->point_of_sale,
                     'client' => $detail->client,
-                    'quantity1' => null, 
+                    'quantity1' => null,
                     'quantity2' => $detail->quantity,
                 ];
             }
