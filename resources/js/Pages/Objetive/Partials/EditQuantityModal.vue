@@ -8,7 +8,7 @@ import TextInput from "@/Components/TextInput.vue";
 import { useForm } from "@inertiajs/vue3";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import Spinner from "@/Components/Spinner.vue";
-import { nextTick, ref, watch } from "vue";
+import { ref, watch } from "vue";
 import dayjs from "dayjs";
 import "dayjs/locale/es";
 dayjs.locale("es");
@@ -17,7 +17,6 @@ const props = defineProps({
   show: Boolean,
   id: Number,
   quantity: Number,
-  field: String,
 });
 
 const isLoading = ref(false);
@@ -25,16 +24,14 @@ const isLoading = ref(false);
 const form = useForm({
   quantity: props.quantity || 0,
   sellout_detail_id: props.id,
-  field: props.field,
 });
 
 // Observa cambios en props y actualiza los valores en el formulario
 watch(
-  () => [props.quantity, props.id, props.field],
-  ([newQuantity, newId, newField]) => {
+  () => [props.quantity, props.id],
+  ([newQuantity, newId]) => {
     form.quantity = newQuantity;
     form.sellout_detail_id = newId;
-    form.field = newField;
   }
 );
 
@@ -69,7 +66,7 @@ const closeModal = () => {
         <h2 class="text-lg font-medium text-gray-900">Cantidad de unidades</h2>
 
         <p class="mt-1 text-sm text-gray-600">
-          Editar la cantidad de la venta
+          Editar la cantidad
         </p>
         <div class="mt-4">
           <InputLabel for="quantity" value="Cantidad de unidades" />

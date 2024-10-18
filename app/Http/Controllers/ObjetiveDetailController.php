@@ -8,6 +8,7 @@ use App\Models\SellOutDetail;
 use App\Models\ObjetiveDetail;
 use App\Http\Requests\StoreObjetiveDetailRequest;
 use App\Http\Requests\UpdateObjetiveDetailRequest;
+use App\Models\Brand;
 
 class ObjetiveDetailController extends Controller
 {
@@ -70,22 +71,13 @@ class ObjetiveDetailController extends Controller
     public function editQuantity(Request $request)
     {
         $objetiveDetail = ObjetiveDetail::find($request->sellout_detail_id);
-        $objetiveId = $objetiveDetail->objetive_id;
-        $field = $request->field;
-        $percentage = $this->getPercentage($objetiveId, $objetiveDetail->brand);
+        $brandPrice = Brand::where('name', $objetiveDetail->brand)->pluck('weighted_price')->first();
 
-        $objetiveDetail->$field = $request->quantity;
-        $objetiveDetail->quantity_with_percentage =  $request->quantity + ($request->quantity * $percentage / 100);
+        $objetiveDetail->price = $request->quantity * $brandPrice;
+        $objetiveDetail->quantity_with_percentage =  $request->quantity;
         $objetiveDetail->save();
 
         return redirect()->back()->with('success', 'Cantidad actualizada correctamente');
     }
 
-    public function getPercentage($objetiveId, $brand)
-    {
-        $percentage = Percentage::where('objetive_id', $objetiveId)
-            ->where('brand', $brand)
-            ->first();
-        return $percentage->percentage;
-    }
 }

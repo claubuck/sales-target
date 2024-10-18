@@ -19,7 +19,10 @@
 
           <!-- Mostrar totales dentro del div -->
           <div class="mt-4 ml-8">
-            <p class="text-sm font-bold text-gray-900">
+            <p
+              v-if="showColumnComparePeriod"
+              class="text-sm font-bold text-gray-900"
+            >
               Total Unidades de
               {{
                 showColumnComparePeriod
@@ -28,12 +31,24 @@
               }}
               : {{ totalQuantity }}
             </p>
+            <p
+              v-if="showColumnComparePeriodSecondary"
+              class="text-sm font-bold text-gray-900"
+            >
+              Total Unidades de
+              {{
+                showColumnComparePeriodSecondary
+                  ? formatDate(objetive.compare_period_secondary)
+                  : formatDate(objetive.compare_period)
+              }}
+              : {{ totalQuantity }}
+            </p>
             <p class="text-sm font-bold text-gray-900">
               Total Unidades de {{ formatDate(objetive.period) }} :
               {{ totalQuantityPeriod }}
             </p>
             <p class="text-sm font-bold text-gray-900">
-              Total Pesos: ${{ totalPrice }}
+              Total Pesos: ${{ Number(totalPrice).toLocaleString() }}
             </p>
 
             <!-- Variación porcentual -->
@@ -58,129 +73,7 @@
         <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
           <table class="min-w-full divide-y divide-gray-300">
             <thead>
-              <tr>
-                <th
-                  class="whitespace-nowrap py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900"
-                >
-                  Cadena
-                </th>
-                <th
-                  class="whitespace-nowrap py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900"
-                >
-                  PDV
-                </th>
-                <th
-                  v-if="showColumnComparePeriod"
-                  class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900"
-                >
-                  Unidades {{ formatDate(objetive.compare_period) }} {{objetive.compare_period_sellout_type == 'sellout' ? '(ST)': ''}}
-                </th>
-                <th
-                  v-if="showColumnComparePeriodSecondary"
-                  class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900"
-                >
-                  Unidades {{ formatDate(objetive.compare_period_secondary) }} {{objetive.compare_period_secondary_sellout_type == 'sellout' ? '(ST)': ''}}
-                </th>
-                <th
-                  class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900"
-                >
-                  Unidades {{ formatDate(objetive.period) }}
-                </th>
-                <th
-                  class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900"
-                >
-                  Pesos
-                </th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200 bg-white">
-              <template v-for="[client, group] in Object.entries(groupedData)">
-                <template
-                  v-for="(selloutdata, index) in group.items"
-                  :key="selloutdata.id"
-                >
-                  <tr>
-                    <td
-                      class="whitespace-nowrap px-2 py-2 text-sm font-medium text-gray-900"
-                    >
-                      {{ selloutdata.client }}
-                    </td>
-                    <td
-                      class="whitespace-nowrap px-2 py-2 text-sm text-gray-900"
-                    >
-                      {{ selloutdata.point_of_sale }}
-                    </td>
-                    <td
-                      v-if="showColumnComparePeriod"
-                      class="whitespace-nowrap px-2 py-2 text-sm text-gray-500"
-                    >
-                      <a
-                        href="#"
-                        @click.prevent="
-                          openEditQuantityModal(
-                            selloutdata.id,
-                            selloutdata.quantity,
-                            'quantity'
-                          )
-                        "
-                        class="text-indigo-600 hover:underline"
-                      >
-                        {{ selloutdata.quantity }}
-                      </a>
-                    </td>
-                    <td
-                      v-if="showColumnComparePeriodSecondary"
-                      class="whitespace-nowrap px-2 py-2 text-sm text-gray-500"
-                    >
-                    <a
-                        href="#"
-                        @click.prevent="
-                          openEditQuantityModal(
-                            selloutdata.id,
-                            selloutdata.quantity,
-                            'quantity_secondary'
-                          )
-                        "
-                        class="text-indigo-600 hover:underline"
-                      >
-                      {{ selloutdata.quantity_secondary }}
-                    </a>
-                    </td>
-                    <td
-                      class="whitespace-nowrap px-2 py-2 text-sm text-gray-500"
-                    >
-                      {{ selloutdata.quantity_with_percentage }}
-                    </td>
-                    <td
-                      class="whitespace-nowrap px-2 py-2 text-sm text-gray-500"
-                    >
-                      {{ selloutdata.price }}
-                    </td>
-                  </tr>
-                </template>
-                <tr class="font-bold bg-yellow-200">
-                  <td colspan="2" class="text-gray-900">
-                    Subtotal {{ client }}
-                  </td>
-                  <td v-if="showColumnComparePeriod" class="text-gray-900">
-                    {{ group.totalQuantity }}
-                  </td>
-                  <td
-                    v-if="showColumnComparePeriodSecondary"
-                    class="text-gray-900"
-                  >
-                    {{ group.totalSecondaryQuantity }}
-                  </td>
-                  <td class="text-gray-900">
-                    {{ group.totalQuantityWithPercentage }}
-                  </td>
-                  <td class="text-gray-900">
-                    ${{ group.totalPrice.toFixed(2) }}
-                  </td>
-                </tr>
-              </template>
-
-              <tr class="font-bold">
+              <tr class="font-bold bg-green-200">
                 <td colspan="2" class="text-gray-900">Total SO</td>
                 <td v-if="showColumnComparePeriod" class="text-gray-900">
                   {{
@@ -213,10 +106,135 @@
                   ${{
                     Object.values(groupedData)
                       .reduce((acc, group) => acc + group.totalPrice, 0)
-                      .toFixed(2)
+                      .toLocaleString()
                   }}
                 </td>
               </tr>
+              <tr>
+                <th
+                  class="whitespace-nowrap py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900"
+                >
+                  Cadena
+                </th>
+                <th
+                  class="whitespace-nowrap py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900"
+                >
+                  PDV
+                </th>
+                <th
+                  v-if="showColumnComparePeriod"
+                  class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900"
+                >
+                  Unidades {{ formatDate(objetive.compare_period) }}
+                  {{
+                    objetive.compare_period_sellout_type == "sellout"
+                      ? "(ST)"
+                      : ""
+                  }}
+                </th>
+                <th
+                  v-if="showColumnComparePeriodSecondary"
+                  class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900"
+                >
+                  Unidades {{ formatDate(objetive.compare_period_secondary) }}
+                  {{
+                    objetive.compare_period_secondary_sellout_type == "sellout"
+                      ? "(ST)"
+                      : ""
+                  }}
+                </th>
+                <th
+                  class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900"
+                >
+                  Unidades {{ formatDate(objetive.period) }}
+                </th>
+                <th
+                  class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900"
+                >
+                  Pesos
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 bg-white">
+              <template v-for="[client, group] in Object.entries(groupedData)">
+                <!-- Subtotales -->
+                <tr class="font-bold bg-yellow-200">
+                  <td colspan="2" class="text-gray-900">
+                    Subtotal {{ client }}
+                  </td>
+                  <td v-if="showColumnComparePeriod" class="text-gray-900">
+                    {{ group.totalQuantity }}
+                  </td>
+                  <td
+                    v-if="showColumnComparePeriodSecondary"
+                    class="text-gray-900"
+                  >
+                    {{ group.totalSecondaryQuantity }}
+                  </td>
+                  <td class="text-gray-900">
+                    {{ group.totalQuantityWithPercentage }}
+                  </td>
+                  <td class="text-gray-900">
+                    ${{ group.totalPrice.toLocaleString() }}
+                  </td>
+                </tr>
+                <!-- clientes -->
+                <template
+                  v-for="(selloutdata, index) in group.items"
+                  :key="selloutdata.id"
+                >
+                  <tr>
+                    <td
+                      class="whitespace-nowrap px-2 py-2 text-sm font-medium text-gray-900"
+                    >
+                      {{ selloutdata.client }}
+                    </td>
+                    <td
+                      class="whitespace-nowrap px-2 py-2 text-sm text-gray-900"
+                    >
+                      {{ selloutdata.point_of_sale }}
+                    </td>
+                    <td
+                      v-if="showColumnComparePeriod"
+                      class="whitespace-nowrap px-2 py-2 text-sm text-gray-500"
+                    >
+                      {{ selloutdata.quantity }}
+                    </td>
+                    <td
+                      v-if="showColumnComparePeriodSecondary"
+                      class="whitespace-nowrap px-2 py-2 text-sm text-gray-500"
+                    >
+                      {{ selloutdata.quantity_secondary }}
+                    </td>
+                    <td
+                      class="whitespace-nowrap px-2 py-2 text-sm text-gray-500"
+                    >
+                      <a
+                        href="#"
+                        @click.prevent="
+                          openEditQuantityModal(
+                            selloutdata.id,
+                            selloutdata.quantity_with_percentage,
+                            'quantity_secondary'
+                          )
+                        "
+                        class="text-indigo-600 hover:underline"
+                      >
+                        {{ selloutdata.quantity_with_percentage }}
+                      </a>
+                    </td>
+                    <td
+                      class="whitespace-nowrap px-2 py-2 text-sm text-gray-500"
+                    >
+                      $ {{ Number(selloutdata.price).toLocaleString() }}
+                    </td>
+                  </tr>
+                </template>
+                <!-- Espacio antes del subtotal -->
+                <tr>
+                  <td colspan="6" class="py-8"></td>
+                </tr>
+              </template>
             </tbody>
           </table>
         </div>
@@ -235,7 +253,6 @@
     @close="showEditQuantityModal = false"
     :id="selectedSelloutId"
     :quantity="selectedSelloutQuantity"
-    :field="selectedField"
   />
 </template>
 
@@ -260,7 +277,6 @@ const activeBrand = ref(props.brand);
 const showEditQuantityModal = ref(false);
 const selectedSelloutId = ref(null);
 const selectedSelloutQuantity = ref(null);
-const selectedField = ref(null);
 
 // Agrupar datos y calcular subtotales
 const groupedData = computed(() => {
@@ -340,9 +356,10 @@ const totalQuantityPeriod = computed(() => {
 });
 
 const totalPrice = computed(() => {
-  return Object.values(groupedData.value)
-    .reduce((acc, group) => acc + group.totalPrice, 0)
-    .toFixed(2);
+  return Object.values(groupedData.value).reduce(
+    (acc, group) => acc + group.totalPrice,
+    0
+  );
 });
 
 // Inicializa percentageChange
@@ -357,10 +374,9 @@ const percentageChange = computed(() => {
 });
 
 // Función para abrir el modal de edición de cantidad
-const openEditQuantityModal = (id, quantity, field) => {
+const openEditQuantityModal = (id, quantity) => {
   selectedSelloutId.value = id;
   selectedSelloutQuantity.value = quantity;
-  selectedField.value = field;
   showEditQuantityModal.value = true;
 };
 </script>
