@@ -50,7 +50,7 @@ class BrandSeeder extends Seeder
                 'axis' => 'EJE 3',
             ],
             [
-                'name' => 'BENETON',
+                'name' => 'BENETTON',
                 'description' => 'Description 3',
                 'weighted_price' => 1500,
                 'axis' => 'EJE 3',
