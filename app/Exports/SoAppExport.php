@@ -25,7 +25,7 @@ class SoAppExport implements FromCollection, WithHeadings, WithMapping, WithColu
      */
     public function collection()
     {
-        return ObjetiveDetail::where('objetive_id', $this->id)->select('client', 'point_of_sale', 'brand', 'price')->get();
+        return ObjetiveDetail::where('objetive_id', $this->id)->select('client', 'point_of_sale', 'brand', 'price', 'quantity_with_percentage')->get();
     }
 
     public function headings(): array
@@ -35,7 +35,8 @@ class SoAppExport implements FromCollection, WithHeadings, WithMapping, WithColu
             'POS',
             'Division',
             'Marca',
-            'Objetivo'
+            'Objetivo',
+            'Unidades'
         ];
     }
 
@@ -52,7 +53,8 @@ class SoAppExport implements FromCollection, WithHeadings, WithMapping, WithColu
             $objetiveDetail->point_of_sale ?? '-',
             $this->getDivision($objetiveDetail->brand),
             $objetiveDetail->brand ?? '-',
-            $objetiveDetail->price ?? 0
+            $objetiveDetail->price ?? 0,
+            $objetiveDetail->quantity_with_percentage ?? 0,
         ];
     }
 
@@ -80,6 +82,7 @@ class SoAppExport implements FromCollection, WithHeadings, WithMapping, WithColu
             'C' => 20,
             'D' => 20,
             'E' => 20,
+            'F' => 20,
         ];
     }
 
@@ -92,11 +95,11 @@ class SoAppExport implements FromCollection, WithHeadings, WithMapping, WithColu
     public function styles(Worksheet $sheet)
     {
         // Centrar el contenido de todas las celdas y cabeceras
-        $sheet->getStyle('A1:E' . $sheet->getHighestRow())->getAlignment()->setHorizontal('center');
+        $sheet->getStyle('A1:F' . $sheet->getHighestRow())->getAlignment()->setHorizontal('center');
 
         // Estilo para las cabeceras (centradas y en azul)
-        $sheet->getStyle('A1:E1')->getFont()->setBold(true);
-        $sheet->getStyle('A1:E1')->applyFromArray([
+        $sheet->getStyle('A1:F1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:F1')->applyFromArray([
             'fill' => [
                 'fillType' => 'solid',
                 'startColor' => [
@@ -111,7 +114,7 @@ class SoAppExport implements FromCollection, WithHeadings, WithMapping, WithColu
         for ($row = 2; $row <= $highestRow; $row++) {
             if ($row % 2 == 0) {
                 // Fila par - color celeste claro
-                $sheet->getStyle('A' . $row . ':E' . $row)
+                $sheet->getStyle('A' . $row . ':F' . $row)
                     ->applyFromArray([
                         'fill' => [
                             'fillType' => 'solid',
@@ -122,7 +125,7 @@ class SoAppExport implements FromCollection, WithHeadings, WithMapping, WithColu
                     ]);
             } else {
                 // Fila impar - color blanco (opcional, por defecto ya es blanco)
-                $sheet->getStyle('A' . $row . ':E' . $row)
+                $sheet->getStyle('A' . $row . ':F' . $row)
                     ->applyFromArray([
                         'fill' => [
                             'fillType' => 'solid',
