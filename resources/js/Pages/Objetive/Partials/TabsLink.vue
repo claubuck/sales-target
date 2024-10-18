@@ -5,7 +5,7 @@
       <select
         id="tabs"
         name="tabs"
-        class="block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+        class="block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-center"
       >
         <option v-for="tab in tabs" :key="tab.name" :selected="tab.current">
           {{ tab.name }}
@@ -22,7 +22,7 @@
           :key="tab.name"
           :href="tab.href"
           :class="[
-            'group relative min-w-0 flex-1 overflow-hidden px-4 py-4 text-center text-sm font-medium',
+            'group relative min-w-0 flex-1 overflow-hidden py-5 text-center text-sm font-medium',
             tab.current ? 'text-white' : 'text-gray-600 hover:text-gray-800',
             tabIdx === 0 ? 'rounded-l-lg' : '',
             tabIdx === tabs.length - 1 ? 'rounded-r-lg' : '',
