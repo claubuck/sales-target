@@ -34,6 +34,7 @@ class SetObjetiveController extends Controller
 
         if($filter == 'TODOS'){
             $sellOut = $this->getSellOutAllBrands($objetive);
+            $objetive->load('percentages');
         } else {
             $sellOut = $this->getSellOut($objetive, $filter);
         }
