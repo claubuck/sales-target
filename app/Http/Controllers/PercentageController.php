@@ -43,7 +43,9 @@ class PercentageController extends Controller
 
             $objetive->percentages()->updateOrCreate(
                 ['brand' => $brand], // Criterio de búsqueda
-                $request->all() // Datos a actualizar o crear
+                array_merge($request->all(), [
+                    'real_percentage' => $request->input('percentage'), // Agregar el valor manual aquí
+                ])
             );
 
 
