@@ -13,6 +13,7 @@ class Percentage extends Model
         'objetive_id',
         'brand',
         'percentage',
+        'real_percentage',
         'scope',
     ];
 

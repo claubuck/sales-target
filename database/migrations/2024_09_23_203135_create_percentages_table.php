@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignIdFor(\App\Models\Objetive::class);
             $table->string('brand');
             $table->string('percentage');
+            $table->string('real_percentage')->nullable();
             $table->string('scope')->nullable();
             $table->timestamps();
         });
