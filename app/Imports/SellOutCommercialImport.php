@@ -13,6 +13,21 @@ class SellOutCommercialImport implements ToCollection, WithHeadingRow
     protected $data = [];
     protected $sellOut;
 
+    protected $monthMap = [
+        'ene' => 'Jan',
+        'feb' => 'Feb',
+        'mar' => 'Mar',
+        'abr' => 'Apr',
+        'may' => 'May',
+        'jun' => 'Jun',
+        'jul' => 'Jul',
+        'ago' => 'Aug',
+        'sep' => 'Sep',
+        'oct' => 'Oct',
+        'nov' => 'Nov',
+        'dic' => 'Dec',
+    ];
+
     public function __construct($sellOut)
     {
         $this->sellOut = $sellOut;
@@ -28,21 +43,31 @@ class SellOutCommercialImport implements ToCollection, WithHeadingRow
 
         // Almacena los datos en un array
         foreach ($collection as $row) {
-            $excelYear = $row['ano']; // Obtiene el año del Excel
-            $excelMonth = ucfirst($row['mes']); // Capitaliza el mes para que coincida con el formato de Carbon (e.g., Ago -> Aug)
+            $excelYear = $row['ano'];
+        $excelMonth = strtolower($row['mes']); // Convierte a minúsculas
+        $convertedMonth = isset($this->monthMap[$excelMonth]) ? $this->monthMap[$excelMonth] : null;
 
             // Solo procesa los registros que coincidan con el mes y el año del periodo
-            if ($excelYear == $periodYear && $excelMonth == $periodMonth) {
+            if ($excelYear == $periodYear && $convertedMonth == $periodMonth) {
                 $key = $row['cliente'] . '|' . $row['sucursal'];
+
+                // Obtener punto de venta o null si no existe equivalencia
+                $pointOfSale = $this->getPointOfSale($row['sucursal']);
+
+                // Si no se encontró equivalencia, omitir el registro
+                if ($pointOfSale === null) {
+                    continue;
+                }
 
                 if (!isset($this->data[$key])) {
                     $this->data[$key] = [
                         'client' => $row['cliente'],
                         'brand' => strtoupper($row['marca']),
-                        'point_of_sale' => $this->getPointOfSale($row['sucursal']),
+                        'point_of_sale' => $pointOfSale,
                         'quantity' => $row['sumunidades'],
                     ];
                 }
+                
             }
         }
 
@@ -65,6 +90,7 @@ class SellOutCommercialImport implements ToCollection, WithHeadingRow
     {
         $equivalence = EquivalenceDoors::where('sucursal', $pointOfSale)
             ->first();
-        return $equivalence ? $equivalence->sucursal_objetivo_ba : $pointOfSale;
+        return $equivalence ? $equivalence->sucursal_objetivo_ba : null;
     }
+
 }
