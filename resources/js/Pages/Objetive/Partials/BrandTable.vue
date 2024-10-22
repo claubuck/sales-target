@@ -212,13 +212,19 @@
                       <a
                         href="#"
                         @click.prevent="
-                          openEditQuantityModal(
-                            selloutdata.id,
-                            selloutdata.quantity_with_percentage,
-                            'quantity_secondary'
-                          )
+                          objetive.comparison_period !== null &&
+                            openEditQuantityModal(
+                              selloutdata.id,
+                              selloutdata.quantity_with_percentage,
+                              'quantity_secondary'
+                            )
                         "
-                        class="text-indigo-600 hover:underline"
+                        :class="{
+                          'text-gray-400 cursor-not-allowed':
+                            objetive.comparison_period === null,
+                          'text-indigo-600 hover:underline':
+                            objetive.comparison_period !== null,
+                        }"
                       >
                         {{ selloutdata.quantity_with_percentage }}
                       </a>
@@ -364,13 +370,8 @@ const totalPrice = computed(() => {
 
 // Inicializa percentageChange
 const percentageChange = computed(() => {
-  if (totalQuantityPeriod.value === 0) {
-    return 0; // Evita dividir por cero
-  }
-  return (
-    ((totalQuantityPeriod.value - totalQuantity.value) / totalQuantity.value) *
-    100
-  );
+  const percentage = props.objetive.percentages[0]?.real_percentage ?? 0;
+  return parseFloat(percentage);
 });
 
 // Función para abrir el modal de edición de cantidad
