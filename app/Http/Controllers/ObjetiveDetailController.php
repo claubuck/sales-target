@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
+use App\Models\Brand;
 use App\Models\Percentage;
 use Illuminate\Http\Request;
 use App\Models\SellOutDetail;
 use App\Models\ObjetiveDetail;
 use App\Http\Requests\StoreObjetiveDetailRequest;
 use App\Http\Requests\UpdateObjetiveDetailRequest;
-use App\Models\Brand;
 
 class ObjetiveDetailController extends Controller
 {
@@ -67,17 +68,52 @@ class ObjetiveDetailController extends Controller
     {
         //
     }
-    
+
     public function editQuantity(Request $request)
     {
         $objetiveDetail = ObjetiveDetail::find($request->sellout_detail_id);
-        $brandPrice = Brand::where('name', $objetiveDetail->brand)->pluck('weighted_price')->first();
+        $brand = Brand::where('name', $objetiveDetail->brand)->first();
 
-        $objetiveDetail->price = $request->quantity * $brandPrice;
+        $objetive = $objetiveDetail->objetive;
+
+        $objetiveDetail->price = $request->quantity * $brand->weighted_price;
         $objetiveDetail->quantity_with_percentage =  $request->quantity;
         $objetiveDetail->save();
+
+        $this->calculateRealPercentage($objetive, $objetiveDetail, $brand);
 
         return redirect()->back()->with('success', 'Cantidad actualizada correctamente');
     }
 
+    public function calculateRealPercentage($objetive, $objetiveDetail, $brand)
+    {
+        $compare_period = Carbon::parse($objetive->compare_period)->format('Y-m');
+        $comparison_period = Carbon::parse($objetive->comparison_period)->format('Y-m');
+
+        $field = $compare_period === $comparison_period ? 'quantity' : 'quantity_secondary';
+
+        // Obtener el total del campo `field` y `quantity_with_percentage` donde el brand coincida
+        $totals = $objetiveDetail->where('brand', $brand->name) // Filtrar por brand
+            ->selectRaw("
+        SUM($field) as total_field,
+        SUM(quantity_with_percentage) as total_quantity_with_percentage
+        ")->first();
+
+        // Verifica si se obtuvieron totales
+        if ($totals && $totals->total_quantity_with_percentage != 0) {
+            // Cálculo de la variación porcentual
+            $variationPercentage = (($totals->total_quantity_with_percentage - $totals->total_field) / $totals->total_field) * 100;
+            // Formatear a dos decimales
+            $variationPercentage = number_format($variationPercentage, 2);
+        } else {
+            // Si no se puede calcular la variación, puedes asignar un valor por defecto
+            $variationPercentage = null; // O 0, o cualquier otro valor que tenga sentido en tu contexto
+        }
+
+        $percentage = Percentage::where('objetive_id', $objetive->id)
+            ->where('brand', $brand->name)
+            ->first();
+        $percentage->real_percentage = $variationPercentage;
+        $percentage->save();
+    }
 }
