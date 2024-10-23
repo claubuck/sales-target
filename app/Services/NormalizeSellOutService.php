@@ -10,10 +10,16 @@ class NormalizeSellOutService
 {
     public function normalizeSellOut($comparePeriod, $comparePeriodSecondary, $objetive)
     {
+        //Al buscar un sellout se toma como prioridad el sellout_comercial, luego el sellout
         $sellOut1 = SellOut::whereMonth('period', Carbon::parse($comparePeriod)->format('m'))
-            ->whereYear('period', Carbon::parse($comparePeriod)->format('Y'))->first();
+            ->whereYear('period', Carbon::parse($comparePeriod)->format('Y'))
+            ->orderByRaw("CASE WHEN type = 'sellout_comercial' THEN 1 WHEN type = 'sellout' THEN 2 ELSE 3 END")
+            ->first();
+
         $sellOut2 = SellOut::whereMonth('period', Carbon::parse($comparePeriodSecondary)->format('m'))
-            ->whereYear('period', Carbon::parse($comparePeriodSecondary)->format('Y'))->first();
+            ->whereYear('period', Carbon::parse($comparePeriodSecondary)->format('Y'))
+            ->orderByRaw("CASE WHEN type = 'sellout_comercial' THEN 1 WHEN type = 'sellout' THEN 2 ELSE 3 END")
+            ->first();
 
         $this->saveObjetiveSelloutType($sellOut1, $sellOut2, $objetive);
 
