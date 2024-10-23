@@ -9,9 +9,10 @@ use App\Models\SellOut;
 use App\Models\Objetive;
 use Illuminate\Http\Request;
 use App\Models\SellOutDetail;
+use Illuminate\Support\Facades\Log;
+use App\Services\NormalizeSellOutService;
 use App\Http\Requests\StoreObjetiveRequest;
 use App\Http\Requests\UpdateObjetiveRequest;
-use App\Services\NormalizeSellOutService;
 
 class ObjetiveController extends Controller
 {
@@ -48,24 +49,34 @@ class ObjetiveController extends Controller
      */
     public function store(StoreObjetiveRequest $request, NormalizeSellOutService $sellOutService)
     {
-        $this->validatePeriod($request);
+        try {
+            $errors = $this->validatePeriod($request);
 
-        // Crear un nuevo registro en la base de datos
-        $objetive = Objetive::create([
-            'period' => Carbon::parse($request->input('period'))->format('Y-m-d'),
-            'compare_period' => Carbon::parse($request->input('compare_period'))->format('Y-m-d'),
-            'compare_period_secondary' => Carbon::parse($request->input('compare_period_secondary'))->format('Y-m-d'),
-            'status' => 'active',
-        ]);
+            // Si hay errores, redirigir con todos los errores acumulados
+            if (!empty($errors)) {
+                return redirect()->back()->withErrors($errors)->withInput();
+            }
 
-        // Normalizar los datos de Sell Out
-        $sellOutService->normalizeSellOut(
-            Carbon::parse($request->input('compare_period'))->format('Y-m-d'),
-            Carbon::parse($request->input('compare_period_secondary'))->format('Y-m-d'),
-            $objetive
-        );
+            // Crear un nuevo registro en la base de datos
+            $objetive = Objetive::create([
+                'period' => Carbon::parse($request->input('period'))->format('Y-m-d'),
+                'compare_period' => Carbon::parse($request->input('compare_period'))->format('Y-m-d'),
+                'compare_period_secondary' => Carbon::parse($request->input('compare_period_secondary'))->format('Y-m-d'),
+                'status' => 'active',
+            ]);
 
-        return redirect()->back()->with('success', 'Periodo de objetivo creado correctamente');
+            // Normalizar los datos de Sell Out
+            $sellOutService->normalizeSellOut(
+                Carbon::parse($request->input('compare_period'))->format('Y-m-d'),
+                Carbon::parse($request->input('compare_period_secondary'))->format('Y-m-d'),
+                $objetive
+            );
+
+            return redirect()->back()->with('success', 'Periodo de objetivo creado correctamente');
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return redirect()->back()->with('error', 'Error al crear el periodo de objetivo');
+        }
     }
 
     /**
@@ -73,7 +84,6 @@ class ObjetiveController extends Controller
      */
     public function show(Objetive $objetive)
     {
-        dd($objetive);
         Inertia::render('Objetive/Show', [
             'objetive' => $objetive
         ]);
@@ -136,9 +146,6 @@ class ObjetiveController extends Controller
             $errors['compare_period_secondary'] = 'Para el periodo seleccionado no hay un Sell Out cargado.';
         }
 
-        // Si hay errores, redirigir con todos los errores acumulados
-        if (!empty($errors)) {
-            return redirect()->back()->withErrors($errors)->withInput();
-        }
+        return $errors;
     }
 }
