@@ -26,7 +26,8 @@ class SellOutImport implements ToCollection, WithHeadingRow
     {
         // Almacena los datos en un array
         foreach ($collection as $row) {
-            $key = $row['cliente'] . '|' . $row['puerta'];
+            // Crear clave única basada en cliente, punto de venta y marca
+            $key = $row['cliente'] . '|' . $row['puerta'] . '|' . $row['marca']; 
             
             if (!isset($this->data[$key])) {
                 $this->data[$key] = [
