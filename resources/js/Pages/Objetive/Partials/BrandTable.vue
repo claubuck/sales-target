@@ -23,29 +23,29 @@
               v-if="showColumnComparePeriod"
               class="text-sm font-bold text-gray-900"
             >
-              Total Unidades de
+              Total Unidades mes de comparación
               {{
                 showColumnComparePeriod
                   ? formatDate(objetive.compare_period)
                   : formatDate(objetive.compare_period_secondary)
               }}
-              : {{ totalQuantity }}
+              : {{ formatNumberToThousands(totalQuantity) }}
             </p>
             <p
               v-if="showColumnComparePeriodSecondary"
               class="text-sm font-bold text-gray-900"
             >
-              Total Unidades de
+              Total Unidades mes de comparación
               {{
                 showColumnComparePeriodSecondary
                   ? formatDate(objetive.compare_period_secondary)
                   : formatDate(objetive.compare_period)
               }}
-              : {{ totalQuantity }}
+              : {{ formatNumberToThousands(totalQuantity) }}
             </p>
             <p class="text-sm font-bold text-gray-900">
-              Total Unidades de {{ formatDate(objetive.period) }} :
-              {{ totalQuantityPeriod }}
+              Total Unidades mes Objetivo {{ formatDate(objetive.period) }} :
+              {{ formatNumberToThousands(totalQuantityPeriod) }}
             </p>
             <p class="text-sm font-bold text-gray-900">
               Total Pesos: ${{ Number(totalPrice).toLocaleString() }}
@@ -77,9 +77,12 @@
                 <td colspan="2" class="text-gray-900">Total SO</td>
                 <td v-if="showColumnComparePeriod" class="text-gray-900">
                   {{
-                    Object.values(groupedData).reduce(
-                      (acc, group) => acc + group.totalQuantity,
-                      0
+                    formatNumberToThousands(
+                      Object.values(groupedData).reduce(
+                        (acc, group) =>
+                          acc + (parseFloat(group.totalQuantity) || 0),
+                        0
+                      )
                     )
                   }}
                 </td>
@@ -88,20 +91,28 @@
                   class="text-gray-900"
                 >
                   {{
-                    Object.values(groupedData).reduce(
-                      (acc, group) => acc + group.totalSecondaryQuantity,
-                      0
+                    formatNumberToThousands(
+                      Object.values(groupedData).reduce(
+                        (acc, group) =>
+                          acc + (parseFloat(group.totalSecondaryQuantity) || 0),
+                        0
+                      )
                     )
                   }}
                 </td>
                 <td class="text-gray-900">
                   {{
-                    Object.values(groupedData).reduce(
-                      (acc, group) => acc + group.totalQuantityWithPercentage,
-                      0
+                    formatNumberToThousands(
+                      Object.values(groupedData).reduce(
+                        (acc, group) =>
+                          acc +
+                          (parseFloat(group.totalQuantityWithPercentage) || 0),
+                        0
+                      )
                     )
                   }}
                 </td>
+
                 <td class="text-gray-900">
                   ${{
                     Object.values(groupedData)
@@ -163,16 +174,16 @@
                     Subtotal {{ client }}
                   </td>
                   <td v-if="showColumnComparePeriod" class="text-gray-900">
-                    {{ group.totalQuantity }}
+                    {{ formatNumberToThousands(group.totalQuantity) }}
                   </td>
                   <td
                     v-if="showColumnComparePeriodSecondary"
                     class="text-gray-900"
                   >
-                    {{ group.totalSecondaryQuantity }}
+                    {{ formatNumberToThousands(group.totalSecondaryQuantity) }}
                   </td>
                   <td class="text-gray-900">
-                    {{ group.totalQuantityWithPercentage }}
+                    {{ formatNumberToThousands(group.totalQuantityWithPercentage) }}
                   </td>
                   <td class="text-gray-900">
                     ${{ group.totalPrice.toLocaleString() }}
@@ -356,7 +367,7 @@ const totalQuantity = computed(() => {
 
 const totalQuantityPeriod = computed(() => {
   return Object.values(groupedData.value).reduce(
-    (acc, group) => acc + group.totalQuantityWithPercentage,
+    (acc, group) => acc + (parseFloat(group.totalQuantityWithPercentage) || 0), // Convierte el valor a número
     0
   );
 });
@@ -380,4 +391,17 @@ const openEditQuantityModal = (id, quantity) => {
   selectedSelloutQuantity.value = quantity;
   showEditQuantityModal.value = true;
 };
+
+function formatNumberToThousands(num) {
+  // Convierte el número a tipo número, si es una cadena
+  const number = typeof num === "string" ? parseFloat(num) : num;
+
+  // Asegúrate de que es un número
+  if (isNaN(number)) {
+    return num; // Si no es un número, devuelve el valor original
+  }
+
+  // Convierte el número a string y usa una expresión regular para añadir el punto
+  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
 </script>
