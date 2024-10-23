@@ -52,8 +52,12 @@
                     border: '1px solid white',
                   }"
                 >
-                  <!-- Nombre de la marca -->
-                  <div class="font-bold mb-1">{{ brand.name }}</div>
+                  <!-- Nombre de la marca centrado y con altura específica -->
+                  <div
+                    class="flex items-center justify-center text-center font-bold mb-1 h-14"
+                  >
+                    {{ brand.name }}
+                  </div>
 
                   <!-- Línea divisora -->
                   <hr class="border-gray-300 my-2" />
