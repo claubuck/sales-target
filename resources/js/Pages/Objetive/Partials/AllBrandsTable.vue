@@ -6,18 +6,25 @@
           Objetivos de Ventas por Marca
         </h1>
         <p class="mt-2 text-sm text-gray-700">
-          Listado de objetivos de ventas agrupados por cliente, mostrando la cantidad y el
-          total por punto de venta.
+          Listado de objetivos de ventas agrupados por cliente, mostrando la
+          cantidad y el total por punto de venta.
         </p>
       </div>
-      <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+      <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none flex space-x-4">
+        <a
+          type="button"
+          :href="route('soapp.export-borrador', objetive.id)"
+          class="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
+        >
+          Exportar borrador
+        </a>
         <a
           type="button"
           :href="route('soapp.export', objetive.id)"
           class="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
         >
           Exportar SO APP
-      </a>
+        </a>
       </div>
     </div>
     <div class="mt-8 flow-root">
@@ -44,9 +51,70 @@
                     backgroundColor: brand.axis ? colorMap[brand.axis] : '',
                     border: '1px solid white',
                   }"
-                  colspan="2"
                 >
-                  {{ brand.name }}
+                  <!-- Nombre de la marca -->
+                  <div class="font-bold mb-1">{{ brand.name }}</div>
+
+                  <!-- Línea divisora -->
+                  <hr class="border-gray-300 my-2" />
+
+                  <!-- Porcentaje Configurado -->
+                  <div class="text-xxxs text-gray-700">
+                    <span class="block font-semibold">Seteado:</span>
+                    <span
+                      class="flex items-center justify-center text-indigo-600 bg-indigo-100 px-0.5 py-0.25 rounded"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-2 w-2 mr-0.5 text-indigo-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 4v16m8-8H4"
+                        />
+                      </svg>
+                      {{ percentageForBrand(brand.name)[0] }}%
+                    </span>
+                  </div>
+
+                  <!-- Porcentaje Real -->
+                  <div class="text-xxxs text-gray-700 mt-0.5">
+                    <span class="block font-semibold">Real:</span>
+                    <span
+                      class="flex items-center justify-center text-green-600 bg-green-100 px-0.5 py-0.25 rounded"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-2 w-2 mr-0.5 text-green-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 4v16m8-8H4"
+                        />
+                      </svg>
+                      {{ percentageForBrand(brand.name)[1] }}%
+                    </span>
+                  </div>
+                </th>
+                <th
+                  class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                >
+                  Total Unidades
+                </th>
+                <th
+                  class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                >
+                  Total Pesos
                 </th>
               </tr>
               <tr>
@@ -65,15 +133,6 @@
                   >
                     Unidades
                   </th>
-                  <th
-                    :style="{
-                      backgroundColor: brand.axis ? colorMap[brand.axis] : '',
-                      border: '1px solid white',
-                    }"
-                    class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                  >
-                    Pesos
-                  </th>
                 </template>
               </tr>
             </thead>
@@ -85,10 +144,12 @@
                 >
                   {{ item.client }}
                 </td>
-                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 sticky left-[90px] bg-white z-10">
+                <td
+                  class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 sticky left-[90px] bg-white z-10"
+                >
                   {{ item.point_of_sale }}
                 </td>
-                <!-- Recorre cada marca para agregar las columnas de cantidad y precio -->
+                <!-- Recorre cada marca para agregar solo la columna de cantidad -->
                 <template
                   v-for="brand in brands"
                   :key="brand.name + '-' + item.client"
@@ -96,14 +157,18 @@
                   <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                     {{ getBrandData(item, brand.name)?.quantity || "-" }}
                   </td>
-                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                    {{
-                      getBrandData(item, brand.name)?.price
-                        ? "$" + getBrandData(item, brand.name).price
-                        : "-"
-                    }}
-                  </td>
                 </template>
+                <td
+                  class="whitespace-nowrap px-3 py-4 text-sm font-bold text-gray-900"
+                >
+                  {{ calculateTotalUnits(item) }}
+                </td>
+                <td
+                  class="whitespace-nowrap px-3 py-4 text-sm font-bold text-gray-900"
+                >
+                  $
+                  {{ calculateTotalPrice(item).toLocaleString() }}
+                </td>
               </tr>
             </tbody>
           </table>
@@ -112,8 +177,8 @@
     </div>
   </div>
 </template>
-  
-  <script setup>
+
+<script setup>
 import { computed } from "vue";
 
 // Datos de ejemplo
@@ -157,5 +222,24 @@ const colorMap = {
   "EJE 2": "#85c1e9",
   "EJE 3": "#a569bd",
 };
+
+// Función para calcular el total de unidades por fila
+const calculateTotalUnits = (item) => {
+  return item.brands.reduce((total, brand) => {
+    return total + (brand.quantity || 0);
+  }, 0);
+};
+
+// Función para calcular el total de pesos por fila
+const calculateTotalPrice = (item) => {
+  return item.brands.reduce((total, brand) => {
+    return total + (parseFloat(brand.price) || 0); // Convertir a número
+  }, 0);
+};
+
+// Función para obtener el porcentaje de una marca
+const percentageForBrand = (brand) => {
+  const percentage = props.objetive.percentages.find((p) => p.brand === brand);
+  return [percentage?.percentage, percentage?.real_percentage];
+};
 </script>
-  

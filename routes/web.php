@@ -62,6 +62,7 @@ Route::middleware('auth')->group(function () {
 
     //Exportar SO APP
     Route::get('/so-app/export/{id}', [ExportSoAppController::class, 'export'])->name('soapp.export');
+    Route::get('/so-app/export-borrador/{id}', [ExportSoAppController::class, 'exportBorrador'])->name('soapp.export-borrador');
 });
 
 require __DIR__.'/auth.php';

@@ -107,13 +107,13 @@
                   <span class="mx-2"></span>
 
                   <!-- Icono de Exportar a Excel -->
-                  <!-- <a
-                    href="#"
+                  <a
+                    :href="route('soapp.export-borrador', objetive.id)"
                     class="text-green-600 hover:text-green-900"
                     aria-label="Exportar a Excel"
                   >
                     <DocumentChartBarIcon class="w-5 h-5 inline" />
-                  </a> -->
+                  </a>
 
                   <!-- Espacio entre íconos -->
                   <span class="mx-2"></span>
