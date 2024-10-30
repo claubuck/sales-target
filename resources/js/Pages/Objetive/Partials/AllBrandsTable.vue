@@ -28,10 +28,10 @@
       </div>
     </div>
     <div class="mt-8 flow-root">
-      <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+      <div class="-mx-4 -my-2 overflow-x-auto overflow-y-auto max-h-[700px] sm:-mx-6 lg:-mx-8">
         <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
           <table class="min-w-full divide-y divide-gray-300">
-            <thead>
+            <thead class="sticky top-0 bg-white z-20">
               <tr>
                 <th
                   class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 sticky left-0 top-0 bg-white z-10"
@@ -109,6 +109,15 @@
                       {{ percentageForBrand(brand.name)[1] }}%
                     </span>
                   </div>
+                  <!-- Total por marca -->
+                  <div class="text-xxxs text-gray-700 mt-0.5">
+                    <span class="block font-semibold">Total:</span>
+                    <span
+                      class="flex items-center justify-center text-yellow-600 bg-green-100 px-0.5 py-0.25 rounded"
+                    >
+                      {{ calculateTotalUnitsForBrand(brand.name) }} u
+                    </span>
+                  </div>
                 </th>
                 <th
                   class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
@@ -144,7 +153,7 @@
               <!-- Filas de datos -->
               <tr v-for="(item, index) in groupedData" :key="index">
                 <td
-                  class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0 sticky left-0 bg-white z-10"
+                  class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0 sticky left-0 top-0 bg-white z-10"
                 >
                   {{ item.client }}
                 </td>
@@ -246,4 +255,17 @@ const percentageForBrand = (brand) => {
   const percentage = props.objetive.percentages.find((p) => p.brand === brand);
   return [percentage?.percentage, percentage?.real_percentage];
 };
+
+// Función para calcular el total de unidades de una marca específica en todas las filas
+const calculateTotalUnitsForBrand = (brandName) => {
+  return props.sellout.reduce((total, item) => {
+    return total + (item.brand === brandName ? item.quantity || 0 : 0);
+  }, 0);
+};
+
 </script>
+
+<style>
+  /* Estilos personalizados */
+  
+</style>
