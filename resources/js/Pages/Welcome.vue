@@ -35,7 +35,7 @@
           >
         </div>
         <div class="hidden lg:flex lg:flex-1 lg:justify-end">
-          <a href="#" class="text-sm font-semibold leading-6 text-white"
+          <a :href="route('login')" class="text-sm font-semibold leading-6 text-white"
             >Log in <span aria-hidden="true">&rarr;</span></a
           >
         </div>
@@ -80,7 +80,7 @@
               </div>
               <Link
                 :href="route('login')"
-                class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
+                class="rounded-md px-3 py-2 text-white ring-1 ring-white transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
               >
                 Log in
               </Link>
