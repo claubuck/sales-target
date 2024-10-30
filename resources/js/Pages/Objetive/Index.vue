@@ -86,7 +86,12 @@ const periodFormatDate = (date) => {
         <div class="bg-white p-4 shadow-sm sm:rounded-lg">
           <!-- Tabs with sticky position -->
           <div
-            class="sticky top-0 z-50 bg-white shadow"
+            :class="[
+              'top-0 z-50 bg-white shadow transition-all duration-300 overflow-hidden',
+              filter === 'TODOS'
+                ? 'max-h-[5px] hover:min-h-[80px]'
+                : 'sticky h-auto',
+            ]"
           >
             <TabsLink
               :activeTab="activeTab"
