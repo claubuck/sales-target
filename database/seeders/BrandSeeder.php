@@ -62,7 +62,7 @@ class BrandSeeder extends Seeder
                 'axis' => 'EJE 3',
             ],
             [
-                'name' => 'AGATHA',
+                'name' => 'AGATHA RUIZ DE LA PRADA',
                 'description' => 'Description 3',
                 'weighted_price' => 1500,
                 'axis' => 'EJE 3',
