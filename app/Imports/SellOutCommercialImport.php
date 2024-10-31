@@ -44,15 +44,15 @@ class SellOutCommercialImport implements ToCollection, WithHeadingRow
         // Almacena los datos en un array
         foreach ($collection as $row) {
             $excelYear = $row['ano'];
-        $excelMonth = strtolower($row['mes']); // Convierte a minúsculas
-        $convertedMonth = isset($this->monthMap[$excelMonth]) ? $this->monthMap[$excelMonth] : null;
+            $excelMonth = strtolower($row['mes']); // Convierte a minúsculas
+            $convertedMonth = isset($this->monthMap[$excelMonth]) ? $this->monthMap[$excelMonth] : null;
 
             // Solo procesa los registros que coincidan con el mes y el año del periodo
             if ($excelYear == $periodYear && $convertedMonth == $periodMonth) {
-                $key = $row['cliente'] . '|' . $row['sucursal'];
+                $key = $row['cliente'] . '|' . $row['sucursal'] . '|' . $row['marca'];
 
                 // Obtener punto de venta o null si no existe equivalencia
-                $pointOfSale = $this->getPointOfSale($row['sucursal']);
+                $pointOfSale = $this->getPointOfSale($row['sucursal'], $row['cliente']);
 
                 // Si no se encontró equivalencia, omitir el registro
                 if ($pointOfSale === null) {
@@ -67,7 +67,6 @@ class SellOutCommercialImport implements ToCollection, WithHeadingRow
                         'quantity' => $row['sumunidades'],
                     ];
                 }
-                
             }
         }
 
@@ -86,11 +85,15 @@ class SellOutCommercialImport implements ToCollection, WithHeadingRow
         }
     }
 
-    protected function getPointOfSale($pointOfSale)
+    protected function getPointOfSale($pointOfSale, $client)
     {
-        $equivalence = EquivalenceDoors::where('sucursal', $pointOfSale)
-            ->first();
-        return $equivalence ? $equivalence->sucursal_objetivo_ba : null;
-    }
+        $equivalence = EquivalenceDoors::where('client', $client)->where('sucursal', $pointOfSale)->first();
 
+        if (!$equivalence) {
+            Log::warning("No se encontró equivalencia para la puerta: {$pointOfSale}");
+            return null;
+        }
+
+        return $equivalence->sucursal_objetivo_ba;
+    }
 }
