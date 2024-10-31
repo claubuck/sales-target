@@ -27,7 +27,8 @@ class ImportController extends Controller
             ]);
 
             // Crear la fecha del periodo
-            $period = Carbon::createFromFormat('Y-m', "{$request->input('year')}-{$request->input('month')}");
+            $period = Carbon::createFromFormat('Y-m-d', "{$request->input('year')}-{$request->input('month')}-01");
+
 
             // Guardar el sell out
             $sellOut = $this->saveSellOut($request, $period);
@@ -55,17 +56,20 @@ class ImportController extends Controller
             // Validar el archivo
             $request->validate([
                 'file' => 'required|file|mimes:xlsx,xls,csv',
-                'month' => 'required|date_format:m',
+                'month' => 'required|integer|between:0,12',
                 'year' => 'required|date_format:Y',
                 'type' => 'required|string',
             ]);
 
             // Crear la fecha del periodo
-            $period = Carbon::createFromFormat('Y-m', "{$request->input('year')}-{$request->input('month')}");
+            $year = $request->input('year');
+            $month = $request->input('month');
+
+            $period = Carbon::createFromFormat('Y-m-d', "{$year}-{$month}-01");
 
             // Guardar el sell out
             $sellOut = $this->saveSellOut($request, $period);
-            
+
             // Obtener el archivo subido
             $fileName = $this->uploadFile($request->file('file'));
 
