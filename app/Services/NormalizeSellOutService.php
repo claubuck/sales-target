@@ -33,7 +33,7 @@ class NormalizeSellOutService
         foreach ($sellOutDetail1 as $detail) {
             $key = $detail->brand . '|' . $detail->point_of_sale . '|' . $detail->client; // Crear una clave única
             $combinedDetails[$key] = [
-                'brand' => $detail->brand,
+                'brand' => $this->brandName($detail->brand),
                 'point_of_sale' => $detail->point_of_sale,
                 'client' => $detail->client,
                 'quantity1' => $detail->quantity,
@@ -51,7 +51,7 @@ class NormalizeSellOutService
             } else {
                 // Si no existe, agrega un nuevo registro
                 $combinedDetails[$key] = [
-                    'brand' => $detail->brand,
+                    'brand' => $this->brandName($detail->brand),
                     'point_of_sale' => $detail->point_of_sale,
                     'client' => $detail->client,
                     'quantity1' => null,
@@ -87,5 +87,16 @@ class NormalizeSellOutService
         $objetive->save();
 
         return $objetive;
+    }
+
+    public function brandName($brand)
+    {
+        $replacements = [
+            'AGATHA RUIZ DE LA PR' => 'AGATHA RUIZ DE LA PRADA',
+            // Agrega más pares de 'parcial' => 'completo' según necesites
+        ];
+
+        // Si el nombre parcial existe en el array, lo reemplaza; de lo contrario, lo deja igual
+        return $replacements[$brand] ?? $brand;
     }
 }
