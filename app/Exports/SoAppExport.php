@@ -156,6 +156,10 @@ class SoAppExport implements FromCollection, WithHeadings, WithMapping, WithColu
             'CORTASSA' => 'PARFUMERIE',
             'FARMACITY' => 'GTL',
             'GRUPO ROUGE' => 'ROUGE',
+            'FREE SHOP' => 'FIORANI',
+            'PLEYADE' => 'BALCON',
+            'SALVADO HNOS' => 'SALVADO',
+            'PERFUGROUP' => 'PIGMENTO',
             // Agrega más pares de 'parcial' => 'completo' según necesites
         ];
 
