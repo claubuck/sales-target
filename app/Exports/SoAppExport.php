@@ -155,6 +155,7 @@ class SoAppExport implements FromCollection, WithHeadings, WithMapping, WithColu
         $replacements = [
             'CORTASSA' => 'PARFUMERIE',
             'FARMACITY' => 'GTL',
+            'GRUPO ROUGE' => 'ROUGE',
             // Agrega más pares de 'parcial' => 'completo' según necesites
         ];
 
