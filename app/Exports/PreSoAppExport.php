@@ -2,8 +2,10 @@
 
 namespace App\Exports;
 
+use App\Models\Brand;
 use App\Models\Percentage;
 use App\Models\ObjetiveDetail;
+use App\Traits\ClientNameTrait;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -12,7 +14,16 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 
 class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, WithStyles
 {
+    use ClientNameTrait;
+    
     private $id;
+
+    // Define el mapa de colores en PHP
+    private $colorMap = [
+        "EJE 1" => "58d68d", // Verde
+        "EJE 2" => "85c1e9", // Azul
+        "EJE 3" => "a569bd", // Morado
+    ];
 
     public function __construct($id)
     {
@@ -38,7 +49,7 @@ class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
             foreach ($pointOfSales as $pointOfSale => $rows) {
                 // Inicializamos las cantidades por marca y totales
                 $row = [
-                    'client' => $client,
+                    'client' => $this->nameClient($client),
                     'point_of_sale' => $pointOfSale,
                     'CAROLINA HERRERA' => '',
                     'RABANNE' => '',
@@ -178,11 +189,38 @@ class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
 
     public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet): array
     {
-        return [
-            // Estilo para las columnas de TOTAL UNIDADES y TOTAL FACTURACION
+        // Configura los estilos básicos
+        $styles = [
             'N' => ['alignment' => ['horizontal' => Alignment::HORIZONTAL_RIGHT]],
             'O' => ['alignment' => ['horizontal' => Alignment::HORIZONTAL_RIGHT]],
-            // Ajusta las letras de columna según la disposición de tus datos
         ];
+
+        // Recorre cada fila en la colección de datos
+       /*  foreach ($this->collection() as $rowIndex => $row) {
+            
+            foreach (array_keys($row) as $brand) {
+
+                // Consulta el modelo Brand para obtener el eje
+                $brandModel = Brand::where('name', $brand)->first();
+
+                if ($brandModel && isset($this->colorMap[$brandModel->axis])) {
+                    $colorHex = $this->colorMap[$brandModel->axis];
+
+                    // Encuentra la columna correspondiente a la marca
+                    $brandColumn = array_search($brand, array_keys($row)) + 1; // Ajusta según la posición real
+                    $cellCoordinate = $sheet->getCellByColumnAndRow($brandColumn, $rowIndex + 2)->getCoordinate();
+
+                    // Aplica el color de fondo a la celda
+                    $sheet->getStyle($cellCoordinate)->applyFromArray([
+                        'fill' => [
+                            'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                            'startColor' => ['rgb' => ltrim($colorHex, '#')],
+                        ],
+                    ]);
+                }
+            }
+        } */
+
+        return $styles;
     }
 }

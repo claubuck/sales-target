@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Models\Brand;
 use App\Models\ObjetiveDetail;
+use App\Traits\ClientNameTrait;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -13,6 +14,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class SoAppExport implements FromCollection, WithHeadings, WithMapping, WithColumnWidths, WithStyles
 {
+    use ClientNameTrait;
 
     private $id;
 
@@ -141,29 +143,5 @@ class SoAppExport implements FromCollection, WithHeadings, WithMapping, WithColu
          $sheet->getStyle('E2:E' . $highestRow)->getNumberFormat()->setFormatCode('$#,##0.00');
 
         return [];
-    }
-
-    /**
-     * Método auxiliar para obtener el nombre del cliente.
-     *
-     * @param $client
-     * @return string
-     */
-
-    public function nameClient($client)
-    {
-        $replacements = [
-            'CORTASSA' => 'PARFUMERIE',
-            'FARMACITY' => 'GTL',
-            'GRUPO ROUGE' => 'ROUGE',
-            'FREE SHOP' => 'FIORANI',
-            'PLEYADE' => 'BALCON',
-            'SALVADO HNOS' => 'SALVADO',
-            'PERFUGROUP' => 'PIGMENTO',
-            // Agrega más pares de 'parcial' => 'completo' según necesites
-        ];
-
-        // Si el nombre parcial existe en el array, lo reemplaza; de lo contrario, lo deja igual
-        return $replacements[$client] ?? $client;
     }
 }
