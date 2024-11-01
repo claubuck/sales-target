@@ -49,7 +49,7 @@ class SoAppExport implements FromCollection, WithHeadings, WithMapping, WithColu
     public function map($objetiveDetail): array
     {
         return [
-            $objetiveDetail->client ?? '-',
+            $this->nameClient($objetiveDetail->client),
             $objetiveDetail->point_of_sale ?? '-',
             $this->getDivision($objetiveDetail->brand),
             $objetiveDetail->brand ?? '-',
@@ -141,5 +141,24 @@ class SoAppExport implements FromCollection, WithHeadings, WithMapping, WithColu
          $sheet->getStyle('E2:E' . $highestRow)->getNumberFormat()->setFormatCode('$#,##0.00');
 
         return [];
+    }
+
+    /**
+     * Método auxiliar para obtener el nombre del cliente.
+     *
+     * @param $client
+     * @return string
+     */
+
+    public function nameClient($client)
+    {
+        $replacements = [
+            'CORTASSA' => 'PARFUMERIE',
+            'FARMACITY' => 'GTL',
+            // Agrega más pares de 'parcial' => 'completo' según necesites
+        ];
+
+        // Si el nombre parcial existe en el array, lo reemplaza; de lo contrario, lo deja igual
+        return $replacements[$client] ?? $client;
     }
 }
