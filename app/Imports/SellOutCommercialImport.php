@@ -59,7 +59,13 @@ class SellOutCommercialImport implements ToCollection, WithHeadingRow
                     continue;
                 }
 
-                if (!isset($this->data[$key])) {
+                $key = $row['cliente'] . '|' . $pointOfSale . '|' . strtoupper($row['marca']);
+
+                // Si el registro ya existe, suma la cantidad al registro existente
+                if (isset($this->data[$key])) {
+                    $this->data[$key]['quantity'] += $row['sumunidades'];
+                } else {
+                    // Si no existe, crea el registro
                     $this->data[$key] = [
                         'client' => $row['cliente'],
                         'brand' => strtoupper($row['marca']),
@@ -87,7 +93,22 @@ class SellOutCommercialImport implements ToCollection, WithHeadingRow
 
     protected function getPointOfSale($pointOfSale, $client)
     {
-        $equivalence = EquivalenceDoors::where('client', $client)->where('sucursal', $pointOfSale)->first();
+        // Define los puntos de venta que quieres consolidar en un solo nombre
+        $consolidatedPointsOfSale = [
+            'ISLA ALTO ROSARIO' => 'ALTO ROSARIO',
+            'ISLA FRAGANCIAS P.OLMOS' => 'PATIO OLMOS',
+            'ISLA NVO.CENTRO' => 'NUEVOCENTRO SHOPING',
+            'ISLA PASEO DEL SIGLO' => 'PASEO DEL SIGLO SHOPPING',
+        ];
+
+        // Si el punto de venta está en la lista, lo reemplaza con el consolidado
+        if (isset($consolidatedPointsOfSale[$pointOfSale])) {
+            $pointOfSale = $consolidatedPointsOfSale[$pointOfSale];
+        }
+
+        $equivalence = EquivalenceDoors::where('client', $client)
+            ->where('sucursal', $pointOfSale)
+            ->first();
 
         if (!$equivalence) {
             Log::warning("No se encontró equivalencia para la puerta: {$pointOfSale}");
