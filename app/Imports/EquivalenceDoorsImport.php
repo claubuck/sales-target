@@ -19,7 +19,7 @@ class EquivalenceDoorsImport implements ToModel, WithHeadingRow
     public function model(array $row)
     {
         // Verificar si todos los valores son nulos
-        if (is_null($row['cliente']) && is_null($row['sucursal']) && is_null($row['sucursal_objetivo_ba'])) {
+        if (is_null($row['cliente']) || is_null($row['sucursal']) || is_null($row['sucursal_objetivo_ba'])) {
             return null; // Ignorar filas vacías
         }
 
