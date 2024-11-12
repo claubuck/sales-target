@@ -2,12 +2,15 @@
 
 namespace App\Services;
 
+use Carbon\Carbon;
 use App\Models\SellOut;
 use App\Models\ObjetiveDetail;
-use Carbon\Carbon;
+use App\Traits\ClientNameTrait;
 
 class NormalizeSellOutService
 {
+    use ClientNameTrait;
+    
     public function normalizeSellOut($comparePeriod, $comparePeriodSecondary, $objetive)
     {
         //Al buscar un sellout se toma como prioridad el sellout_comercial, luego el sellout
@@ -73,7 +76,7 @@ class NormalizeSellOutService
             $objetive->objetiveDetails()->create([
                 'brand' => $detail['brand'],
                 'point_of_sale' => $detail['point_of_sale'],
-                'client' => $detail['client'],
+                'client' => $this->nameClient($detail['client']),
                 'quantity' => $detail['quantity1'],
                 'quantity_secondary' => $detail['quantity2'],
             ]);
