@@ -15,7 +15,7 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, WithStyles
 {
     use ClientNameTrait;
-    
+
     private $id;
 
     // Define el mapa de colores en PHP
@@ -39,13 +39,45 @@ class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
         $data = ObjetiveDetail::where('objetive_id', $this->id)
             ->select('client', 'point_of_sale', 'brand', 'quantity_with_percentage', 'price')
             ->get()
-            ->groupBy(['client', 'point_of_sale']); // Agrupamos por cliente y punto de venta
+            ->groupBy(['client', 'point_of_sale']);
 
         // Inicializamos el array de resultado
         $result = [];
 
+        // Variable para subtotales de cada cliente
+        $subtotalRow = [
+            'client' => 'Subtotal',
+            'point_of_sale' => '',
+            'CAROLINA HERRERA' => 0,
+            'RABANNE' => 0,
+            'JEAN PAUL GAULTIER' => 0,
+            'NINA RICCI' => 0,
+            'BANDERAS' => 0,
+            'ADOLFO DOMINGUEZ' => 0,
+            'BENETTON' => 0,
+            'SHAKIRA' => 0,
+            'AGATHA RUIZ DE LA PRADA' => 0,
+            'PACHA' => 0,
+            'RAPSODIA' => 0,
+            'DISTRIBUTED BRANDS' => '',
+            'TOTAL UNIDADES' => 0,
+            'TOTAL FACTURACION' => 0,
+        ];
+
+        $currentClient = null;
+
         // Iteramos cada grupo (cliente y punto de venta)
         foreach ($data as $client => $pointOfSales) {
+            if ($currentClient !== null && $currentClient !== $client) {
+                // Añadimos la fila de subtotales del cliente anterior al resultado
+                $result[] = $this->formatRow($subtotalRow);
+                // Reiniciamos subtotales
+                $subtotalRow = array_fill_keys(array_keys($subtotalRow), 0);
+                $subtotalRow['client'] = 'Subtotal';
+            }
+
+            $currentClient = $client;
+
             foreach ($pointOfSales as $pointOfSale => $rows) {
                 // Inicializamos las cantidades por marca y totales
                 $row = [
@@ -62,18 +94,21 @@ class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
                     'AGATHA RUIZ DE LA PRADA' => '',
                     'PACHA' => '',
                     'RAPSODIA' => '',
+                    'DISTRIBUTED BRANDS' => '',
                     'TOTAL UNIDADES' => 0,
                     'TOTAL FACTURACION' => 0,
                 ];
 
                 // Iteramos cada fila dentro del grupo para asignar cantidades a la marca correspondiente
                 foreach ($rows as $detail) {
-                    // Asignamos la cantidad de la marca al campo correspondiente
                     $row[$detail->brand] = $detail->quantity_with_percentage;
-
-                    // Sumar total de unidades y facturación
                     $row['TOTAL UNIDADES'] += $detail->quantity_with_percentage;
                     $row['TOTAL FACTURACION'] += $detail->price;
+
+                    // Sumar al subtotal de la marca y totales
+                    $subtotalRow[$detail->brand] += $detail->quantity_with_percentage;
+                    $subtotalRow['TOTAL UNIDADES'] += $detail->quantity_with_percentage;
+                    $subtotalRow['TOTAL FACTURACION'] += $detail->price;
                 }
 
                 // Formateamos 'TOTAL UNIDADES' y 'TOTAL FACTURACION' en miles y sin decimales
@@ -85,8 +120,20 @@ class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
             }
         }
 
-        // Convertimos los resultados a una colección para la exportación
+        // Añadimos la fila de subtotales del último cliente
+        if ($currentClient !== null) {
+            $result[] = $this->formatRow($subtotalRow);
+        }
+
         return collect($result);
+    }
+
+    private function formatRow($row)
+    {
+        // Formatear los totales en miles sin decimales
+        $row['TOTAL UNIDADES'] = number_format($row['TOTAL UNIDADES'], 0, ',', '.');
+        $row['TOTAL FACTURACION'] = number_format($row['TOTAL FACTURACION'], 0, ',', '.');
+        return $row;
     }
 
 
@@ -189,28 +236,34 @@ class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
 
     public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet): array
     {
-        // Configura los estilos básicos
+        // Configura los estilos de alineación para las columnas N y O
         $styles = [
-            'N' => ['alignment' => ['horizontal' => Alignment::HORIZONTAL_RIGHT]],
-            'O' => ['alignment' => ['horizontal' => Alignment::HORIZONTAL_RIGHT]],
+            'N' => ['alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT]],
+            'O' => ['alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT]],
         ];
 
-        // Recorre cada fila en la colección de datos
-       /*  foreach ($this->collection() as $rowIndex => $row) {
-            
-            foreach (array_keys($row) as $brand) {
+        // Aplica color de fondo rojo para las columnas A y B en las primeras cuatro filas
+        for ($row = 1; $row <= 4; $row++) {
+            $sheet->getStyle("A$row:B$row")->applyFromArray([
+                'fill' => [
+                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => '044e8c'], // Rojo
+                ],
+            ]);
+        }
 
-                // Consulta el modelo Brand para obtener el eje
+        // Aplica el color de fondo en base al eje de la marca solo en filas 1 a 4
+        foreach ($this->collection()->take(4) as $rowIndex => $row) {
+            foreach (array_keys($row) as $columnIndex => $brand) {
                 $brandModel = Brand::where('name', $brand)->first();
 
                 if ($brandModel && isset($this->colorMap[$brandModel->axis])) {
                     $colorHex = $this->colorMap[$brandModel->axis];
 
-                    // Encuentra la columna correspondiente a la marca
-                    $brandColumn = array_search($brand, array_keys($row)) + 1; // Ajusta según la posición real
-                    $cellCoordinate = $sheet->getCellByColumnAndRow($brandColumn, $rowIndex + 2)->getCoordinate();
+                    // Ajuste para la columna actual y fila
+                    $cellCoordinate = $sheet->getCellByColumnAndRow($columnIndex + 1, $rowIndex + 1)->getCoordinate();
 
-                    // Aplica el color de fondo a la celda
+                    // Aplica el color de fondo específico para la marca
                     $sheet->getStyle($cellCoordinate)->applyFromArray([
                         'fill' => [
                             'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
@@ -219,7 +272,7 @@ class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
                     ]);
                 }
             }
-        } */
+        }
 
         return $styles;
     }
