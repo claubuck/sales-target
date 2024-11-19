@@ -11,7 +11,7 @@ trait ClientNameTrait
             'FARMACITY' => 'GTL',
             'GRUPO ROUGE' => 'ROUGE',
             'FREE SHOP' => 'FIORANI',
-            'PLEYADE' => 'BALCON',
+            'PLEYADE' => 'EL BALCON',
             'SALVADO HNOS' => 'SALVADO',
             'PERFUGROUP' => 'PIGMENTO',
             // Agrega más pares de 'parcial' => 'completo' según necesites
