@@ -17,7 +17,7 @@ class SetPeriodObjetiveController extends Controller
 
         $field = $compare_period === $comparison_period ? 'compare_period' : 'compare_period_secondary';
 
-        $value = $objetive->pluck($field)->first();
+        $value = $objetive[$field];
 
         $objetive->update([
             "comparison_period" => $value,
