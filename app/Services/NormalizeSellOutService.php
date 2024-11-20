@@ -10,7 +10,7 @@ use App\Traits\ClientNameTrait;
 class NormalizeSellOutService
 {
     use ClientNameTrait;
-    
+
     public function normalizeSellOut($comparePeriod, $comparePeriodSecondary, $objetive)
     {
         //Al buscar un sellout se toma como prioridad el sellout_comercial, luego el sellout
@@ -35,11 +35,14 @@ class NormalizeSellOutService
         // Combina los detalles de sellOut1
         foreach ($sellOutDetail1 as $detail) {
             $key = $detail->brand . '|' . $detail->point_of_sale . '|' . $detail->client; // Crear una clave única
+            // Calcula quantity1 utilizando el método
+            $quantity = $this->calculateQuantityWithMinimum($detail->brand, $detail->quantity);
+
             $combinedDetails[$key] = [
                 'brand' => $this->brandName($detail->brand),
                 'point_of_sale' => $detail->point_of_sale,
                 'client' => $detail->client,
-                'quantity1' => $detail->quantity,
+                'quantity1' => $quantity,
                 'quantity2' => null, // Inicializa quantity2
             ];
         }
@@ -48,9 +51,12 @@ class NormalizeSellOutService
         foreach ($sellOutDetail2 as $detail) {
             $key = $detail->brand . '|' . $detail->point_of_sale . '|' . $detail->client; // Crear una clave única
 
+            // Calcula quantity2 utilizando el método
+            $quantity = $this->calculateQuantityWithMinimum($detail->brand, $detail->quantity);
+
             if (isset($combinedDetails[$key])) {
                 // Si ya existe, actualiza quantity2
-                $combinedDetails[$key]['quantity2'] = $detail->quantity;
+                $combinedDetails[$key]['quantity2'] = $quantity;
             } else {
                 // Si no existe, agrega un nuevo registro
                 $combinedDetails[$key] = [
@@ -58,7 +64,7 @@ class NormalizeSellOutService
                     'point_of_sale' => $detail->point_of_sale,
                     'client' => $detail->client,
                     'quantity1' => null,
-                    'quantity2' => $detail->quantity,
+                    'quantity2' => $quantity,
                 ];
             }
         }
@@ -101,5 +107,29 @@ class NormalizeSellOutService
 
         // Si el nombre parcial existe en el array, lo reemplaza; de lo contrario, lo deja igual
         return $replacements[$brand] ?? $brand;
+    }
+
+    private function calculateQuantityWithMinimum($brand, $quantity)
+    {
+        // Define los mínimos de unidades solo para ciertas marcas
+        $minimumQuantities = [
+            'AGATHA RUIZ DE LA PR' => 15,
+            'JEAN PAUL GAULTIER' => 8,
+            'NINA RICCI' => 5,
+            // Agrega más marcas con mínimos aquí si es necesario
+        ];
+
+        // Obtén el nombre estándar de la marca
+        $standardBrand = $this->brandName($brand);
+
+        // Si la marca tiene un mínimo definido, verifica el valor
+        if (isset($minimumQuantities[$standardBrand])) {
+            $minimum = $minimumQuantities[$standardBrand];
+            // Devuelve el mayor valor entre el mínimo y el valor actual
+            return max($quantity, $minimum);
+        }
+
+        // Si no tiene un mínimo definido, devuelve el valor original
+        return $quantity;
     }
 }
