@@ -41,7 +41,7 @@
                   ? formatDate(objetive.compare_period_secondary)
                   : formatDate(objetive.compare_period)
               }}
-              : {{ formatNumberToThousands(totalQuantity) }}
+              : {{ formatNumberToThousands(totalSecondaryQuantity) }}
             </p>
             <p class="text-sm font-bold text-gray-900">
               Total Unidades mes Objetivo {{ formatDate(objetive.period) }} :
@@ -361,6 +361,13 @@ const showColumnComparePeriodSecondary = computed(() => {
 const totalQuantity = computed(() => {
   return Object.values(groupedData.value).reduce(
     (acc, group) => acc + group.totalQuantity,
+    0
+  );
+});
+
+const totalSecondaryQuantity = computed(() => {
+  return Object.values(groupedData.value).reduce(
+    (acc, group) => acc + group.totalSecondaryQuantity,
     0
   );
 });
