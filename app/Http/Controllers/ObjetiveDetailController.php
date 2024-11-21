@@ -93,7 +93,7 @@ class ObjetiveDetailController extends Controller
         $field = $compare_period === $comparison_period ? 'quantity' : 'quantity_secondary';
 
         // Obtener el total del campo `field` y `quantity_with_percentage` donde el brand coincida
-        $totals = $objetiveDetail->where('brand', $brand->name) // Filtrar por brand
+        $totals = $objetiveDetail->where('brand', $brand->name)->where('objetive_id', $objetive->id) // Filtrar por brand
             ->selectRaw("
         SUM($field) as total_field,
         SUM(quantity_with_percentage) as total_quantity_with_percentage
