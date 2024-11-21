@@ -154,6 +154,7 @@ class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
                 'AGATHA RUIZ DE LA PRADA',
                 'PACHA',
                 'RAPSODIA',
+                'DISTRIBUTED BRANDS' => '',
                 'TOTAL UNIDADES',
                 'TOTAL FACTURACION'
             ],
