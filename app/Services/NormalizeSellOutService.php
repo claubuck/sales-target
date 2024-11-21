@@ -113,9 +113,10 @@ class NormalizeSellOutService
     {
         // Define los mínimos de unidades solo para ciertas marcas
         $minimumQuantities = [
-            'AGATHA RUIZ DE LA PR' => 15,
-            'JEAN PAUL GAULTIER' => 8,
-            'NINA RICCI' => 5,
+            'AGATHA RUIZ DE LA PR' => 5,
+            'AGATHA RUIZ DE LA PRADA' => 5,
+            'JEAN PAUL GAULTIER' => 15,
+            'NINA RICCI' => 10,
             // Agrega más marcas con mínimos aquí si es necesario
         ];
 
