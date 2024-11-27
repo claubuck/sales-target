@@ -111,10 +111,6 @@ class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
                     $subtotalRow['TOTAL FACTURACION'] += $detail->price;
                 }
 
-                // Formateamos 'TOTAL UNIDADES' y 'TOTAL FACTURACION' en miles y sin decimales
-                $row['TOTAL UNIDADES'] = number_format($row['TOTAL UNIDADES'], 0, ',', '.');
-                $row['TOTAL FACTURACION'] = number_format($row['TOTAL FACTURACION'], 0, ',', '.');
-
                 // Agregamos la fila procesada a los resultados
                 $result[] = $row;
             }
@@ -131,8 +127,8 @@ class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
     private function formatRow($row)
     {
         // Formatear los totales en miles sin decimales
-        $row['TOTAL UNIDADES'] = number_format($row['TOTAL UNIDADES'], 0, ',', '.');
-        $row['TOTAL FACTURACION'] = number_format($row['TOTAL FACTURACION'], 0, ',', '.');
+        /* $row['TOTAL UNIDADES'] = number_format($row['TOTAL UNIDADES'], 0, ',', '.');
+        $row['TOTAL FACTURACION'] = number_format($row['TOTAL FACTURACION'], 0, ',', '.'); */
         return $row;
     }
 
@@ -175,7 +171,8 @@ class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
                 'FINAL % ' . $this->getPercentage('PACHA'),
                 'FINAL % ' . $this->getPercentage('RAPSODIA'),
                 '',
-                ''
+                'FINAL ' . $this->getPercentageTotal() . ' %',
+                'Total facturacion: ' . ObjetiveDetail::where('objetive_id', $this->id)->sum('price')
             ],
 
             // Fila para las unidades totales debajo de cada marca
@@ -193,7 +190,8 @@ class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
                 'TOTAL UNIDADES ' . $this->getTotalUnits('AGATHA RUIZ DE LA PRADA'),
                 'TOTAL UNIDADES ' . $this->getTotalUnits('PACHA'),
                 'TOTAL UNIDADES ' . $this->getTotalUnits('RAPSODIA'),
-                ''
+                '',
+                'Total unidades: ' . ObjetiveDetail::where('objetive_id', $this->id)->sum('quantity_with_percentage'),
             ],
 
             // Fila para las unidades totales debajo de cada marca
@@ -223,6 +221,25 @@ class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
         return $percentage ? $percentage->real_percentage : '';
     }
 
+    private function getPercentageTotal()
+    {
+        // Obtén todos los porcentajes para las marcas de este objetivo
+        $percentages = Percentage::where('objetive_id', $this->id)
+            ->whereNotNull('real_percentage') // Asegúrate de omitir nulos
+            ->pluck('real_percentage');
+
+        // Si no hay porcentajes, retorna 0
+        if ($percentages->isEmpty()) {
+            return 0;
+        }
+
+        // Calcula el porcentaje total prorrateado
+        $totalPercentage = $percentages->sum();
+        $numberOfBrands = $percentages->count();
+
+        return $numberOfBrands > 0 ? round($totalPercentage / $numberOfBrands, 2) : 0;
+    }
+
     // Método para obtener el total de unidades de cada marca
     private function getTotalUnits($brand)
     {
@@ -231,8 +248,8 @@ class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
             ->where('brand', $brand)
             ->sum('quantity_with_percentage');
 
-        // Retorna el total formateado en miles
-        return number_format($totalUnits, 0, ',', '.');
+        // Retorna el total 
+        return $totalUnits;
     }
 
     public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet): array
@@ -251,6 +268,21 @@ class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
                     'startColor' => ['rgb' => '044e8c'], // Rojo
                 ],
             ]);
+        }
+
+        // Aplica color de fondo gris a las filas con subtotales
+        $rows = $this->collection();
+        foreach ($rows as $index => $row) {
+            $rowIndex = $index + 5; // Ajuste para el índice real de la hoja (encabezados ocupan fila 1)
+
+            if ($row['client'] === 'Subtotal') {
+                $sheet->getStyle("A$rowIndex:O$rowIndex")->applyFromArray([
+                    'fill' => [
+                        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                        'startColor' => ['rgb' => 'D3D3D3'], // Gris claro
+                    ],
+                ]);
+            }
         }
 
         // Aplica el color de fondo en base al eje de la marca solo en filas 1 a 4
