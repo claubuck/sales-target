@@ -183,7 +183,9 @@
                     {{ formatNumberToThousands(group.totalSecondaryQuantity) }}
                   </td>
                   <td class="text-gray-900">
-                    {{ formatNumberToThousands(group.totalQuantityWithPercentage) }}
+                    {{
+                      formatNumberToThousands(group.totalQuantityWithPercentage)
+                    }}
                   </td>
                   <td class="text-gray-900">
                     ${{ group.totalPrice.toLocaleString() }}
@@ -207,13 +209,23 @@
                     </td>
                     <td
                       v-if="showColumnComparePeriod"
-                      class="whitespace-nowrap px-2 py-2 text-sm text-gray-500"
+                      class="whitespace-nowrap px-2 py-2 text-sm"
+                      :class="
+                        selloutdata.quantity === 0
+                          ? 'text-red-500'
+                          : 'text-gray-500'
+                      "
                     >
                       {{ selloutdata.quantity }}
                     </td>
                     <td
                       v-if="showColumnComparePeriodSecondary"
-                      class="whitespace-nowrap px-2 py-2 text-sm text-gray-500"
+                      class="whitespace-nowrap px-2 py-2 text-sm"
+                      :class="
+                        selloutdata.quantity_secondary === 0
+                          ? 'text-red-500'
+                          : 'text-gray-500'
+                      "
                     >
                       {{ selloutdata.quantity_secondary }}
                     </td>
