@@ -241,7 +241,8 @@ const percentageForBrand = (brand) => {
 // Función para calcular el total de unidades de una marca específica en todas las filas
 const calculateTotalUnitsForBrand = (brandName) => {
   return props.sellout.reduce((total, item) => {
-    return total + (item.brand === brandName ? item.quantity || 0 : 0);
+    return total + (item.brand === brandName ? item.quantity_with_percentage
+    || 0 : 0);
   }, 0);
 };
 </script>
