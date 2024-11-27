@@ -3,15 +3,23 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
+use App\Models\Brand;
 use App\Models\Objetive;
 use App\Models\Percentage;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\StorePercentageRequest;
 use App\Http\Requests\UpdatePercentageRequest;
-use App\Models\Brand;
+use App\Services\CalculateRealPercentageService;
 
 class PercentageController extends Controller
 {
+    protected $calculateRealPercentageService;
+
+    public function __construct(CalculateRealPercentageService $calculateRealPercentageService)
+    {
+        $this->calculateRealPercentageService = $calculateRealPercentageService;
+    }
+    
     /**
      * Display a listing of the resource.
      */
@@ -54,12 +62,21 @@ class PercentageController extends Controller
             // Aplica el porcentaje a todos los registros con la misma marca
             $objetive->objetiveDetails()
                 ->where('brand', $brand)
-                ->each(function ($detail) use ($percentage, $column) {
-                    $detail->quantity_with_percentage = $detail->$column * (1 + $percentage);
+                ->each(function ($detail) use ($percentage, $column, $brand) {
+                    // Aplica el porcentaje y valida el mínimo en un solo paso
+                    $calculatedQuantity = $detail->$column * (1 + $percentage);
+                    $detail->quantity_with_percentage = $this->calculateQuantityWithMinimum($brand, $calculatedQuantity);
+
                     $detail->save();
                 });
 
             $this->updatePrices($objetive, $brand, $column);
+
+            $objetiveDetail = $objetive->objetiveDetails()->first();
+
+            $brand = Brand::where('name', $brand)->first();
+
+            $this->calculateRealPercentageService->calculate($objetive, $objetiveDetail, $brand);
 
             return redirect()->back()->with('success', 'Porcentaje creado correctamente');
         } catch (\Exception $e) {
@@ -74,13 +91,12 @@ class PercentageController extends Controller
 
     public function getColumn(Objetive $objetive)
     {
-            // Convierte los periodos en instancias de Carbon y compara solo el mes y el año
-            $comparisonPeriod = Carbon::parse($objetive->comparison_period)->format('Y-m');
-            $comparePeriod = Carbon::parse($objetive->compare_period)->format('Y-m');
+        // Convierte los periodos en instancias de Carbon y compara solo el mes y el año
+        $comparisonPeriod = Carbon::parse($objetive->comparison_period)->format('Y-m');
+        $comparePeriod = Carbon::parse($objetive->compare_period)->format('Y-m');
 
-            // Si el mes y el año son iguales, retorna 'quantity', de lo contrario 'quantity_secondary'
-            return $comparisonPeriod === $comparePeriod ? 'quantity' : 'quantity_secondary';
-
+        // Si el mes y el año son iguales, retorna 'quantity', de lo contrario 'quantity_secondary'
+        return $comparisonPeriod === $comparePeriod ? 'quantity' : 'quantity_secondary';
     }
 
     /**
@@ -128,5 +144,30 @@ class PercentageController extends Controller
     public function destroy(Percentage $percentage)
     {
         //
+    }
+
+    private function calculateQuantityWithMinimum($brand, $quantity)
+    {
+        // Define los mínimos de unidades solo para ciertas marcas
+        $minimumQuantities = [
+            'AGATHA RUIZ DE LA PR' => 5,
+            'AGATHA RUIZ DE LA PRADA' => 5,
+            'JEAN PAUL GAULTIER' => 15,
+            'NINA RICCI' => 10,
+            // Agrega más marcas con mínimos aquí si es necesario
+        ];
+
+        // Obtén el nombre estándar de la marca
+        $standardBrand = $brand;
+
+        // Si la marca tiene un mínimo definido, verifica el valor
+        if (isset($minimumQuantities[$standardBrand])) {
+            $minimum = $minimumQuantities[$standardBrand];
+            // Devuelve el mayor valor entre el mínimo y el valor actual
+            return max($quantity, $minimum);
+        }
+
+        // Si no tiene un mínimo definido, devuelve el valor original
+        return $quantity;
     }
 }
