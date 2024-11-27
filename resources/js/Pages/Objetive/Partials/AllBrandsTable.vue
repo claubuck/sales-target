@@ -28,7 +28,9 @@
       </div>
     </div>
     <div class="mt-8 flow-root">
-      <div class="-mx-4 -my-2 overflow-x-auto overflow-y-auto max-h-[700px] sm:-mx-6 lg:-mx-8">
+      <div
+        class="-mx-4 -my-2 overflow-x-auto overflow-y-auto max-h-[700px] sm:-mx-6 lg:-mx-8"
+      >
         <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
           <table class="min-w-full divide-y divide-gray-300">
             <thead class="sticky top-0 bg-white z-20">
@@ -68,20 +70,7 @@
                     <span
                       class="flex items-center justify-center text-indigo-600 bg-indigo-100 px-0.5 py-0.25 rounded"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-2 w-2 mr-0.5 text-indigo-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M12 4v16m8-8H4"
-                        />
-                      </svg>
+                      {{ percentageForBrand(brand.name)[0] >= 0 ? "+" : ""}}
                       {{ percentageForBrand(brand.name)[0] }}%
                     </span>
                   </div>
@@ -90,23 +79,16 @@
                   <div class="text-xxxs text-gray-700 mt-0.5">
                     <span class="block font-semibold">Real:</span>
                     <span
-                      class="flex items-center justify-center text-green-600 bg-green-100 px-0.5 py-0.25 rounded"
+                      class="flex items-center justify-center px-0.5 py-0.25 rounded"
+                      :class="{
+                        'text-green-600 bg-green-100':
+                          percentageForBrand(brand.name)[1] >= 0,
+                        'text-red-600 bg-red-100':
+                          percentageForBrand(brand.name)[1] < 0,
+                      }"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-2 w-2 mr-0.5 text-green-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M12 4v16m8-8H4"
-                        />
-                      </svg>
-                      {{ percentageForBrand(brand.name)[1] }}%
+                      {{ percentageForBrand(brand.name)[1] >= 0 ? "+" : ""
+                      }}{{ percentageForBrand(brand.name)[1] }}%
                     </span>
                   </div>
                   <!-- Total por marca -->
@@ -167,7 +149,7 @@
                   v-for="brand in brands"
                   :key="brand.name + '-' + item.client"
                 >
-                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 border-r border-gray-300 text-center">
                     {{ getBrandData(item, brand.name)?.quantity || "-" }}
                   </td>
                 </template>
@@ -262,10 +244,8 @@ const calculateTotalUnitsForBrand = (brandName) => {
     return total + (item.brand === brandName ? item.quantity || 0 : 0);
   }, 0);
 };
-
 </script>
 
 <style>
-  /* Estilos personalizados */
-  
+/* Estilos personalizados */
 </style>
