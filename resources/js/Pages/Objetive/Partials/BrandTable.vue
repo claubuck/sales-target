@@ -209,23 +209,13 @@
                     </td>
                     <td
                       v-if="showColumnComparePeriod"
-                      class="whitespace-nowrap px-2 py-2 text-sm"
-                      :class="
-                        selloutdata.quantity === 0
-                          ? 'text-red-500'
-                          : 'text-gray-500'
-                      "
+                      class="whitespace-nowrap px-2 py-2 text-sm text-gray-500"
                     >
                       {{ selloutdata.quantity }}
                     </td>
                     <td
                       v-if="showColumnComparePeriodSecondary"
-                      class="whitespace-nowrap px-2 py-2 text-sm"
-                      :class="
-                        selloutdata.quantity_secondary === 0
-                          ? 'text-red-500'
-                          : 'text-gray-500'
-                      "
+                      class="whitespace-nowrap px-2 py-2 text-sm text-gray-500"
                     >
                       {{ selloutdata.quantity_secondary }}
                     </td>
@@ -246,7 +236,18 @@
                           'text-gray-400 cursor-not-allowed':
                             objetive.comparison_period === null,
                           'text-indigo-600 hover:underline':
-                            objetive.comparison_period !== null,
+                            !isEdited(
+                              selloutdata.quantity_with_percentage,
+                              selloutdata.quantity,
+                              selloutdata.quantity_secondary
+                            ) && objetive.comparison_period !== null,
+                          'text-red-500':
+                            selloutdata.quantity_with_percentage === 0,
+                          'text-gray-900 font-bold': isEdited(
+                            selloutdata.quantity_with_percentage,
+                            selloutdata.quantity,
+                            selloutdata.quantity_secondary
+                          ),
                         }"
                       >
                         {{ selloutdata.quantity_with_percentage }}
@@ -422,5 +423,16 @@ function formatNumberToThousands(num) {
 
   // Convierte el número a string y usa una expresión regular para añadir el punto
   return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+// Función para determinar si la cantidad ha sido editada
+function isEdited(quantityWithPercentage, quantity, quantitySecondary) {
+  if (showColumnComparePeriod.value) {
+    return quantityWithPercentage !== quantity;
+  } else if (showColumnComparePeriodSecondary.value) {
+    return quantityWithPercentage !== quantitySecondary;
+  } else {
+    return false;
+  }
 }
 </script>
