@@ -172,7 +172,7 @@ class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
                 'FINAL % ' . $this->getPercentage('RAPSODIA'),
                 '',
                 'FINAL ' . $this->getPercentageTotal() . ' %',
-                'Total facturacion: ' . ObjetiveDetail::where('objetive_id', $this->id)->sum('price')
+                ObjetiveDetail::where('objetive_id', $this->id)->sum('price')
             ],
 
             // Fila para las unidades totales debajo de cada marca
@@ -191,7 +191,7 @@ class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
                 'TOTAL UNIDADES ' . $this->getTotalUnits('PACHA'),
                 'TOTAL UNIDADES ' . $this->getTotalUnits('RAPSODIA'),
                 '',
-                'Total unidades: ' . ObjetiveDetail::where('objetive_id', $this->id)->sum('quantity_with_percentage'),
+                ObjetiveDetail::where('objetive_id', $this->id)->sum('quantity_with_percentage'),
             ],
 
             // Fila para las unidades totales debajo de cada marca
