@@ -150,7 +150,7 @@
                   :key="brand.name + '-' + item.client"
                 >
                   <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 border-r border-gray-300 text-center">
-                    {{ getBrandData(item, brand.name)?.quantity || "-" }}
+                    {{ getBrandData(item, brand.name)?.quantity_with_percentage || "-" }}
                   </td>
                 </template>
                 <td
