@@ -111,6 +111,9 @@ class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
                     $subtotalRow['TOTAL FACTURACION'] += $detail->price;
                 }
 
+                // Formateamos 'TOTAL FACTURACION' sin decimales
+                $row['TOTAL FACTURACION'] = '$' . number_format($row['TOTAL FACTURACION'], 0, ',', '.');
+
                 // Agregamos la fila procesada a los resultados
                 $result[] = $row;
             }
@@ -127,8 +130,8 @@ class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
     private function formatRow($row)
     {
         // Formatear los totales en miles sin decimales
-        /* $row['TOTAL UNIDADES'] = number_format($row['TOTAL UNIDADES'], 0, ',', '.');
-        $row['TOTAL FACTURACION'] = number_format($row['TOTAL FACTURACION'], 0, ',', '.'); */
+        /* $row['TOTAL UNIDADES'] = number_format($row['TOTAL UNIDADES'], 0, ',', '.'); */
+        $row['TOTAL FACTURACION'] = '$' . number_format($row['TOTAL FACTURACION'], 0, ',', '.');
         return $row;
     }
 
@@ -172,7 +175,8 @@ class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
                 'FINAL % ' . $this->getPercentage('RAPSODIA'),
                 '',
                 'FINAL ' . $this->getPercentageTotal() . ' %',
-                ObjetiveDetail::where('objetive_id', $this->id)->sum('price')
+                '$' . number_format(ObjetiveDetail::where('objetive_id', $this->id)->sum('price'), 0, ',', '.')
+                
             ],
 
             // Fila para las unidades totales debajo de cada marca
@@ -258,6 +262,7 @@ class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
         $styles = [
             'N' => ['alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT]],
             'O' => ['alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT]],
+            'P' => ['alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT]],
         ];
 
         // Aplica color de fondo rojo para las columnas A y B en las primeras cuatro filas
