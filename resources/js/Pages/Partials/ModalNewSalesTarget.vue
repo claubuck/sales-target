@@ -61,9 +61,11 @@ const months = [
         'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
       ];
-// Generar el rango de años dinámicamente
+// Generar el rango de años dinámicamente, incluyendo el año siguiente
 const currentYear = new Date().getFullYear();
-const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
+const years = Array.from({ length: 11 }, (_, i) => currentYear + 2 - i);
+
+console.log('years', years);
 
 
 </script>
