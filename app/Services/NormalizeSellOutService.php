@@ -5,11 +5,12 @@ namespace App\Services;
 use Carbon\Carbon;
 use App\Models\SellOut;
 use App\Traits\ClientNameTrait;
+use App\Models\EquivalenceDoors;
 
 class NormalizeSellOutService
 {
     use ClientNameTrait;
-    
+
     public function normalizeSellOut($comparePeriod, $comparePeriodSecondary, $objetive)
     {
         //Al buscar un sellout se toma como prioridad el sellout_comercial, luego el sellout
@@ -66,6 +67,9 @@ class NormalizeSellOutService
         $combinedDetails = collect($combinedDetails)->values();
 
         $this->saveDetails($combinedDetails, $objetive);
+
+        // Completa los pointOfSale que faltan
+        $this->completeMissingPointOfSale($objetive);
     }
 
     public function saveDetails($details, $objetive)
@@ -100,5 +104,46 @@ class NormalizeSellOutService
 
         // Si el nombre parcial existe en el array, lo reemplaza; de lo contrario, lo deja igual
         return $replacements[$brand] ?? $brand;
+    }
+
+    public function completeMissingPointOfSale($objetive)
+    {
+        // Define los grupos directamente en el método
+        $groups = [
+            [
+                'client' => 'ROUGE',
+                'brand' => 'BANDERAS',
+                'equivalence_client' => 'GRUPO ROUGE',
+            ]
+        ];
+
+        // Itera sobre cada grupo
+        foreach ($groups as $group) {
+            // Obtiene todos los pointOfSale existentes en los detalles del objetivo para el cliente y la marca específicos
+            $existingPointOfSales = $objetive->objetiveDetails()
+                ->where('client', $group['client'])
+                ->where('brand', $group['brand'])
+                ->pluck('point_of_sale')
+                ->toArray();
+
+            // Obtiene todos los pointOfSale disponibles en EquivalenceDoors para el cliente equivalente
+            $availablePointOfSales = EquivalenceDoors::where('client', $group['equivalence_client'])
+                ->pluck('sucursal_objetivo_ba')
+                ->toArray();
+
+            // Determina los pointOfSale faltantes
+            $missingPointOfSales = array_diff($availablePointOfSales, $existingPointOfSales);
+
+            // Por cada pointOfSale faltante, agrega un nuevo detalle
+            foreach ($missingPointOfSales as $pointOfSale) {
+                $objetive->objetiveDetails()->create([
+                    'brand' => $group['brand'],
+                    'point_of_sale' => $pointOfSale,
+                    'client' => $group['client'],
+                    'quantity' => 0,
+                    'quantity_secondary' => 0,
+                ]);
+            }
+        }
     }
 }
