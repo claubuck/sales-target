@@ -19,7 +19,7 @@ class PercentageController extends Controller
     {
         $this->calculateRealPercentageService = $calculateRealPercentageService;
     }
-    
+
     /**
      * Display a listing of the resource.
      */
@@ -148,6 +148,11 @@ class PercentageController extends Controller
 
     private function calculateQuantityWithMinimum($brand, $quantity)
     {
+        // Si la cantidad es negativa, retorna 0
+        if ($quantity < 0) {
+            return 0;
+        }
+
         // Define los mínimos de unidades solo para ciertas marcas
         $minimumQuantities = [
             'AGATHA RUIZ DE LA PR' => 5,
