@@ -105,11 +105,13 @@
                   class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
                 >
                   Total Unidades
+                  {{ calculateTotalUnitsAll() }} 
                 </th>
                 <th
                   class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
                 >
                   Total Pesos
+                  ${{ calculateTotalPriceAll().toLocaleString() }}
                 </th>
               </tr>
               <tr>
@@ -243,6 +245,20 @@ const calculateTotalUnitsForBrand = (brandName) => {
   return props.sellout.reduce((total, item) => {
     return total + (item.brand === brandName ? item.quantity_with_percentage
     || 0 : 0);
+  }, 0);
+};
+
+// Función para calcular el total de unidades de todas las filas
+const calculateTotalUnitsAll = () => {
+  return groupedData.value.reduce((total, item) => {
+    return total + calculateTotalUnits(item);
+  }, 0);
+};
+
+// Función para calcular el total de pesos de todas las filas
+const calculateTotalPriceAll = () => {
+  return groupedData.value.reduce((total, item) => {
+    return total + calculateTotalPrice(item);
   }, 0);
 };
 </script>
