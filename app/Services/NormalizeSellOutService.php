@@ -114,7 +114,7 @@ class NormalizeSellOutService
             'ROUGE' => 'GRUPO ROUGE',
             'JULERIAQUE' => 'GRUPO JULERIAQUE',
             'PIGMENTO' => 'PERFUGRUP',
-            'PERFUMERIE' => 'CORTASSA',
+            'PARFUMERIE' => 'CORTASSA',
             'DUTY PAID' => 'DUTY PAID',
             'GTL' => 'FARMACITY',
             'FIORANI' => 'FREE SHOP',
