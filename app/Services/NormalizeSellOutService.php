@@ -112,7 +112,7 @@ class NormalizeSellOutService
         // Define las relaciones cliente -> equivalencia de cliente
         $clients = [
             'ROUGE' => 'GRUPO ROUGE',
-            'JULERIAQUE' => 'GRUPO JULERIAQUE',
+            'JULERIAQUE' => 'JULERIAQUE',
             'PIGMENTO' => 'PERFUGRUP',
             'PARFUMERIE' => 'CORTASSA',
             'DUTY PAID' => 'DUTY PAID',
