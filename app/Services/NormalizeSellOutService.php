@@ -140,9 +140,9 @@ class NormalizeSellOutService
                     ->pluck('sucursal_objetivo_ba')
                     ->toArray();
 
-                // Determina los pointOfSale faltantes
-                $missingPointOfSales = array_diff($availablePointOfSales, $existingPointOfSales);
-
+                // Determina los pointOfSale faltantes y elimina duplicados
+                $missingPointOfSales = array_unique(array_diff($availablePointOfSales, $existingPointOfSales));
+                
                 // Por cada pointOfSale faltante, agrega un nuevo detalle
                 foreach ($missingPointOfSales as $pointOfSale) {
                     $objetive->objetiveDetails()->create([
