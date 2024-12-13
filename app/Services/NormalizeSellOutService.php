@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Carbon\Carbon;
+use App\Models\Brand;
 use App\Models\SellOut;
 use App\Traits\ClientNameTrait;
 use App\Models\EquivalenceDoors;
@@ -108,41 +109,50 @@ class NormalizeSellOutService
 
     public function completeMissingPointOfSale($objetive)
     {
-        // Define los grupos directamente en el método
-        $groups = [
-            [
-                'client' => 'ROUGE',
-                'brand' => 'BANDERAS',
-                'equivalence_client' => 'GRUPO ROUGE',
-            ]
+        // Define las relaciones cliente -> equivalencia de cliente
+        $clients = [
+            'ROUGE' => 'GRUPO ROUGE',
+            'JULERIAQUE' => 'GRUPO JULERIAQUE',
+            'PIGMENTO' => 'PERFUGRUP',
+            'PERFUMERIE' => 'CORTASSA',
+            'DUTY PAID' => 'DUTY PAID',
+            'GTL' => 'FARMACITY',
+            'FIORANI' => 'FREE SHOP',
+            'EL BALCON' => 'PLEYADE',
+            'SALVADO' => 'SALVADO HNOS',
+            // Agrega más clientes y equivalencias aquí
         ];
 
-        // Itera sobre cada grupo
-        foreach ($groups as $group) {
-            // Obtiene todos los pointOfSale existentes en los detalles del objetivo para el cliente y la marca específicos
-            $existingPointOfSales = $objetive->objetiveDetails()
-                ->where('client', $group['client'])
-                ->where('brand', $group['brand'])
-                ->pluck('point_of_sale')
-                ->toArray();
+        foreach ($clients as $client => $equivalenceClient) {
+            // Obtén las marcas asociadas al cliente
+            $brands = Brand::pluck('name')->toArray();
 
-            // Obtiene todos los pointOfSale disponibles en EquivalenceDoors para el cliente equivalente
-            $availablePointOfSales = EquivalenceDoors::where('client', $group['equivalence_client'])
-                ->pluck('sucursal_objetivo_ba')
-                ->toArray();
+            foreach ($brands as $brand) {
+                // Obtiene los pointOfSale existentes en los detalles del objetivo
+                $existingPointOfSales = $objetive->objetiveDetails()
+                    ->where('client', $client)
+                    ->where('brand', $brand)
+                    ->pluck('point_of_sale')
+                    ->toArray();
 
-            // Determina los pointOfSale faltantes
-            $missingPointOfSales = array_diff($availablePointOfSales, $existingPointOfSales);
+                // Obtiene los pointOfSale disponibles en EquivalenceDoors
+                $availablePointOfSales = EquivalenceDoors::where('client', $equivalenceClient)
+                    ->pluck('sucursal_objetivo_ba')
+                    ->toArray();
 
-            // Por cada pointOfSale faltante, agrega un nuevo detalle
-            foreach ($missingPointOfSales as $pointOfSale) {
-                $objetive->objetiveDetails()->create([
-                    'brand' => $group['brand'],
-                    'point_of_sale' => $pointOfSale,
-                    'client' => $group['client'],
-                    'quantity' => 0,
-                    'quantity_secondary' => 0,
-                ]);
+                // Determina los pointOfSale faltantes
+                $missingPointOfSales = array_diff($availablePointOfSales, $existingPointOfSales);
+
+                // Por cada pointOfSale faltante, agrega un nuevo detalle
+                foreach ($missingPointOfSales as $pointOfSale) {
+                    $objetive->objetiveDetails()->create([
+                        'brand' => $brand,
+                        'point_of_sale' => $pointOfSale,
+                        'client' => $client,
+                        'quantity' => 0,
+                        'quantity_secondary' => 0,
+                    ]);
+                }
             }
         }
     }
