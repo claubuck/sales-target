@@ -27,7 +27,10 @@ class SoAppExport implements FromCollection, WithHeadings, WithMapping, WithColu
      */
     public function collection()
     {
-        return ObjetiveDetail::where('objetive_id', $this->id)->select('client', 'point_of_sale', 'brand', 'price', 'quantity_with_percentage')->get();
+        return ObjetiveDetail::where('objetive_id', $this->id)
+        ->where('brand', '!=', 'DISTRIBUTED BRANDS')  // Excluir la marca "DISTRIBUTED BRANDS"
+        ->select('client', 'point_of_sale', 'brand', 'price', 'quantity_with_percentage')
+        ->get();
     }
 
     public function headings(): array
