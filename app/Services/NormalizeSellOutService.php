@@ -77,6 +77,14 @@ class NormalizeSellOutService
     {
         // Guarda los detalles en la base de datos
         foreach ($details as $detail) {
+            // Verifica si el punto de venta existe en EquivalenceDoors
+            $exists = EquivalenceDoors::where('sucursal_objetivo_ba', $detail['point_of_sale'])->exists();
+
+            // Si el punto de venta no existe, se omite la creación
+            if (!$exists) {
+                continue;
+            }
+
             $objetive->objetiveDetails()->create([
                 'brand' => $detail['brand'],
                 'point_of_sale' => $detail['point_of_sale'],
@@ -142,7 +150,7 @@ class NormalizeSellOutService
 
                 // Determina los pointOfSale faltantes y elimina duplicados
                 $missingPointOfSales = array_unique(array_diff($availablePointOfSales, $existingPointOfSales));
-                
+
                 // Por cada pointOfSale faltante, agrega un nuevo detalle
                 foreach ($missingPointOfSales as $pointOfSale) {
                     $objetive->objetiveDetails()->create([
