@@ -57,7 +57,7 @@ class PercentageController extends Controller
             );
 
 
-            $column = $this->getColumn($objetive);
+            $column = $this->getColumn($objetive);         
 
             // Aplica el porcentaje a todos los registros con la misma marca
             $objetive->objetiveDetails()
@@ -70,7 +70,7 @@ class PercentageController extends Controller
                     $detail->save();
                 });
 
-            $this->updatePrices($objetive, $brand, $column);
+            $this->updatePrices($objetive, $brand);
 
             $objetiveDetail = $objetive->objetiveDetails()->first();
 
@@ -103,13 +103,13 @@ class PercentageController extends Controller
      * Actualiza los precios de los detalles del objetivo
      */
 
-    public function updatePrices(Objetive $objetive, $brandName, $column)
+    public function updatePrices(Objetive $objetive, $brandName)
     {
         $brand = Brand::where('name', $brandName)->first();
         $objetive->objetiveDetails()
             ->where('brand', $brandName)
-            ->each(function ($detail) use ($brand, $column) {
-                $detail->price = $detail->$column * $brand->weighted_price;
+            ->each(function ($detail) use ($brand) {
+                $detail->price = $detail->quantity_with_percentage * $brand->weighted_price;
                 $detail->save();
             });
     }
