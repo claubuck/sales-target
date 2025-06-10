@@ -312,32 +312,70 @@ const selectedSelloutQuantity = ref(null);
 const groupedData = computed(() => {
   const groups = {};
 
+  // Primero agrupamos por cliente y PDV
   props.sellout.forEach((data) => {
+    const key = `${data.client}|${data.point_of_sale}`;
     if (!groups[data.client]) {
       groups[data.client] = {
         totalQuantity: 0,
         totalSecondaryQuantity: 0,
         totalQuantityWithPercentage: 0,
         totalPrice: 0,
-        items: [],
+        items: {},
       };
     }
-    groups[data.client].totalQuantity += Number(data.quantity);
-    groups[data.client].totalSecondaryQuantity += Number(
-      data.quantity_secondary
-    );
-    groups[data.client].totalQuantityWithPercentage += Number(
-      data.quantity_with_percentage
-    );
-    // Validar y procesar el precio
+
+    if (!groups[data.client].items[key]) {
+      groups[data.client].items[key] = {
+        client: data.client,
+        point_of_sale: data.point_of_sale,
+        quantity: 0,
+        quantity_secondary: 0,
+        quantity_with_percentage: 0,
+        price: 0,
+        id: data.id,
+      };
+    }
+
+    // Asignamos las cantidades según corresponda
+    if (data.quantity) {
+      groups[data.client].items[key].quantity = Number(data.quantity);
+    }
+    if (data.quantity_secondary) {
+      groups[data.client].items[key].quantity_secondary = Number(data.quantity_secondary);
+    }
+    if (data.quantity_with_percentage) {
+      groups[data.client].items[key].quantity_with_percentage = Number(data.quantity_with_percentage);
+    }
     if (data.price) {
-      const priceValue = parseFloat(data.price.replace(/[$,]/g, ""));
+      const priceValue = parseFloat(data.price.toString().replace(/[$,]/g, ""));
       if (!isNaN(priceValue)) {
-        groups[data.client].totalPrice += priceValue;
+        groups[data.client].items[key].price = priceValue;
       }
     }
-    groups[data.client].items.push(data);
   });
+
+  // Convertimos los items a array y calculamos subtotales
+  for (const client in groups) {
+    const itemsArr = Object.values(groups[client].items);
+    let totalQuantity = 0;
+    let totalSecondaryQuantity = 0;
+    let totalQuantityWithPercentage = 0;
+    let totalPrice = 0;
+
+    itemsArr.forEach((item) => {
+      totalQuantity += item.quantity;
+      totalSecondaryQuantity += item.quantity_secondary;
+      totalQuantityWithPercentage += item.quantity_with_percentage;
+      totalPrice += item.price;
+    });
+
+    groups[client].totalQuantity = totalQuantity;
+    groups[client].totalSecondaryQuantity = totalSecondaryQuantity;
+    groups[client].totalQuantityWithPercentage = totalQuantityWithPercentage;
+    groups[client].totalPrice = totalPrice;
+    groups[client].items = itemsArr;
+  }
 
   return groups;
 });
