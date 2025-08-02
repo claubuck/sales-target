@@ -45,10 +45,6 @@ watch(
   }
 );
 
-const formatDate = (date) => {
-  return dayjs(date).format("MMMM");
-};
-
 const periodFormatDate = (date) => {
   return dayjs(date).format("MMMM YYYY");
 };
@@ -61,7 +57,7 @@ const periodFormatDate = (date) => {
     <template #header>
       <div class="flex items-center justify-between">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-          Objetivos de {{ formatDate(objetive.period) }} 2024
+          Objetivos de {{ periodFormatDate(objetive.period) }}
         </h2>
         <button
           @click="showPeriodChangeModal = true"
