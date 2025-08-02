@@ -223,7 +223,7 @@ const colorMap = {
 // Función para calcular el total de unidades por fila
 const calculateTotalUnits = (item) => {
   return item.brands.reduce((total, brand) => {
-    return total + (brand.quantity || 0);
+    return total + (brand.quantity_with_percentage || 0);
   }, 0);
 };
 
