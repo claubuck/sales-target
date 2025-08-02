@@ -27,8 +27,12 @@ class SoAppExport implements FromCollection, WithHeadings, WithMapping, WithColu
      */
     public function collection()
     {
+        // Obtener las marcas válidas del modelo Brand
+        $validBrands = Brand::pluck('name')->toArray();
+        
         return ObjetiveDetail::where('objetive_id', $this->id)
         ->where('brand', '!=', 'DISTRIBUTED BRANDS')  // Excluir la marca "DISTRIBUTED BRANDS"
+            ->whereIn('brand', $validBrands)  // Solo incluir marcas que existen en el modelo Brand
         ->select('client', 'point_of_sale', 'brand', 'price', 'quantity_with_percentage')
         ->get();
     }
