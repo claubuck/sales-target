@@ -111,7 +111,6 @@ class SellOutCommercialImport implements ToCollection, WithHeadingRow
             ->first();
 
         if (!$equivalence) {
-            Log::warning("No se encontró equivalencia para la puerta: {$pointOfSale}");
             return null;
         }
 
