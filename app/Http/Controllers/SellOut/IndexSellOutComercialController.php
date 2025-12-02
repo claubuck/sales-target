@@ -11,7 +11,9 @@ class IndexSellOutComercialController extends Controller
 {
     public function __invoke()
     {
-        $sellOuts = SellOut::where('type', 'sellout_commercial')->get();
+        $sellOuts = SellOut::where('type', 'sellout_commercial')
+            ->orderBy('period', 'desc')
+            ->get();
         
         return Inertia::render('SellOutCommercial/Index', [
             'sellouts' => $sellOuts,
