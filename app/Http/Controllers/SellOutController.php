@@ -17,7 +17,9 @@ class SellOutController extends Controller
      */
     public function index()
     {
-        $sellOuts = SellOut::where('type', 'sellout')->get();
+        $sellOuts = SellOut::where('type', 'sellout')
+            ->orderBy('period', 'desc')
+            ->get();
 
         return Inertia::render('SellOut/Index', [
             'sellouts' => $sellOuts,
