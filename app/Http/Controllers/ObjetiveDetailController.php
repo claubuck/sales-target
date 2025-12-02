@@ -79,8 +79,12 @@ class ObjetiveDetailController extends Controller
 
     public function editQuantity(Request $request)
     {
-        $objetiveDetail = ObjetiveDetail::find($request->sellout_detail_id);
+        $objetiveDetail = ObjetiveDetail::findOrFail($request->sellout_detail_id);
         $brand = Brand::where('name', $objetiveDetail->brand)->first();
+        
+        if (!$brand) {
+            return redirect()->back()->with('error', 'La marca no existe en el sistema');
+        }
 
         $objetive = $objetiveDetail->objetive;
 
