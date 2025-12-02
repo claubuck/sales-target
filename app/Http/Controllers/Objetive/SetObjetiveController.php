@@ -18,7 +18,7 @@ class SetObjetiveController extends Controller
 {
     public function __invoke(Request $request, $id)
     {
-        $objetive = Objetive::find($id);
+        $objetive = Objetive::findOrFail($id);
 
         $brands = Brand::all();
         $filter = 'CAROLINA HERRERA'; //tab activa por defecto
