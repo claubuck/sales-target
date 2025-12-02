@@ -11,7 +11,12 @@ class SetPeriodObjetiveController extends Controller
 {
     public function __invoke(Request $request)
     {
-        $objetive = Objetive::find($request->input('objetive_id'));
+        $objetive = Objetive::findOrFail($request->input('objetive_id'));
+        
+        if (!$objetive->compare_period) {
+            return redirect()->back()->with('error', 'El objetivo no tiene un período de comparación configurado');
+        }
+        
         $compare_period = Carbon::parse($objetive->compare_period)->format('Y-m');
         $comparison_period = Carbon::parse($request->input('comparison_period'))->format('Y-m');
 
