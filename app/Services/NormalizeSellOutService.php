@@ -4,7 +4,7 @@ namespace App\Services;
 
 use Carbon\Carbon;
 use App\Models\Brand;
-use App\Models\SellOut;
+use App\Models\CommercialRaw;
 use App\Traits\ClientNameTrait;
 use App\Models\EquivalenceDoors;
 
@@ -12,65 +12,102 @@ class NormalizeSellOutService
 {
     use ClientNameTrait;
 
+    /** Month number to commercial_raw mes (Spanish abbr). */
+    protected static array $monthToMes = [
+        1 => 'ene', 2 => 'feb', 3 => 'mar', 4 => 'abr', 5 => 'may', 6 => 'jun',
+        7 => 'jul', 8 => 'ago', 9 => 'sep', 10 => 'oct', 11 => 'nov', 12 => 'dic',
+    ];
+
     public function normalizeSellOut($comparePeriod, $comparePeriodSecondary, $objetive)
     {
-        //Al buscar un sellout se toma como prioridad el sellout_commercial, luego el sellout
-        $sellOut1 = SellOut::whereMonth('period', Carbon::parse($comparePeriod)->format('m'))
-            ->whereYear('period', Carbon::parse($comparePeriod)->format('Y'))
-            ->orderByRaw("CASE WHEN type = 'sellout_commercial' THEN 1 WHEN type = 'sellout' THEN 2 ELSE 3 END")
-            ->first();
+        $objetive->compare_period_sellout_type = 'sellout_commercial';
+        $objetive->compare_period_secondary_sellout_type = 'sellout_commercial';
+        $objetive->save();
 
-        $sellOut2 = SellOut::whereMonth('period', Carbon::parse($comparePeriodSecondary)->format('m'))
-            ->whereYear('period', Carbon::parse($comparePeriodSecondary)->format('Y'))
-            ->orderByRaw("CASE WHEN type = 'sellout_commercial' THEN 1 WHEN type = 'sellout' THEN 2 ELSE 3 END")
-            ->first();
+        $date1 = Carbon::parse($comparePeriod);
+        $date2 = Carbon::parse($comparePeriodSecondary);
+        $ano1 = (int) $date1->format('Y');
+        $ano2 = (int) $date2->format('Y');
+        $mes1 = self::$monthToMes[(int) $date1->format('n')] ?? null;
+        $mes2 = self::$monthToMes[(int) $date2->format('n')] ?? null;
 
-        $this->saveObjetiveSelloutType($sellOut1, $sellOut2, $objetive);
+        if (! $mes1 || ! $mes2) {
+            $this->saveDetails(collect(), $objetive);
+            $this->completeMissingPointOfSale($objetive);
+            return;
+        }
 
-        $sellOutDetail1 = $sellOut1->sellOutDetails;
-        $sellOutDetail2 = $sellOut2->sellOutDetails;
+        $rows1 = CommercialRaw::where('ano', $ano1)->whereRaw('LOWER(mes) = ?', [strtolower($mes1)])->get();
+        $rows2 = CommercialRaw::where('ano', $ano2)->whereRaw('LOWER(mes) = ?', [strtolower($mes2)])->get();
 
-        // Inicializa un array para combinar los detalles
         $combinedDetails = [];
 
-        // Combina los detalles de sellOut1
-        foreach ($sellOutDetail1 as $detail) {
-            $key = $detail->brand . '|' . $detail->point_of_sale . '|' . $detail->client; // Crear una clave única
-            $combinedDetails[$key] = [
-                'brand' => $this->brandName($detail->brand),
-                'point_of_sale' => $detail->point_of_sale,
-                'client' => $detail->client,
-                'quantity1' => $detail->quantity,
-                'quantity2' => null, // Inicializa quantity2
-            ];
-        }
-
-        // Combina los detalles de sellOut2
-        foreach ($sellOutDetail2 as $detail) {
-            $key = $detail->brand . '|' . $detail->point_of_sale . '|' . $detail->client; // Crear una clave única
-
-            if (isset($combinedDetails[$key])) {
-                // Si ya existe, actualiza quantity2
-                $combinedDetails[$key]['quantity2'] = $detail->quantity;
-            } else {
-                // Si no existe, agrega un nuevo registro
+        foreach ($rows1 as $row) {
+            if ($row->sucursal === null || $row->sucursal === '') {
+                continue;
+            }
+            $pointOfSale = $this->resolvePointOfSale($row->sucursal, $row->cliente);
+            if ($pointOfSale === null) {
+                continue;
+            }
+            $brand = $this->brandName($row->marca);
+            $clientShort = $this->nameClient($row->cliente);
+            $key = $brand . '|' . $pointOfSale . '|' . $clientShort;
+            if (! isset($combinedDetails[$key])) {
                 $combinedDetails[$key] = [
-                    'brand' => $this->brandName($detail->brand),
-                    'point_of_sale' => $detail->point_of_sale,
-                    'client' => $detail->client,
-                    'quantity1' => null,
-                    'quantity2' => $detail->quantity,
+                    'brand' => $brand,
+                    'point_of_sale' => $pointOfSale,
+                    'client' => $row->cliente,
+                    'quantity1' => 0,
+                    'quantity2' => null,
                 ];
             }
+            $combinedDetails[$key]['quantity1'] += (float) $row->unidades;
         }
 
-        // Convierte el array de nuevo a una colección y obtiene todos los valores
-        $combinedDetails = collect($combinedDetails)->values();
+        foreach ($rows2 as $row) {
+            if ($row->sucursal === null || $row->sucursal === '') {
+                continue;
+            }
+            $pointOfSale = $this->resolvePointOfSale($row->sucursal, $row->cliente);
+            if ($pointOfSale === null) {
+                continue;
+            }
+            $brand = $this->brandName($row->marca);
+            $clientShort = $this->nameClient($row->cliente);
+            $key = $brand . '|' . $pointOfSale . '|' . $clientShort;
+            if (! isset($combinedDetails[$key])) {
+                $combinedDetails[$key] = [
+                    'brand' => $brand,
+                    'point_of_sale' => $pointOfSale,
+                    'client' => $row->cliente,
+                    'quantity1' => null,
+                    'quantity2' => 0,
+                ];
+            }
+            $combinedDetails[$key]['quantity2'] = ($combinedDetails[$key]['quantity2'] ?? 0) + (float) $row->unidades;
+        }
 
-        $this->saveDetails($combinedDetails, $objetive);
-
-        // Completa los pointOfSale que faltan
+        $this->saveDetails(collect($combinedDetails)->values(), $objetive);
         $this->completeMissingPointOfSale($objetive);
+    }
+
+    protected function resolvePointOfSale(string $sucursal, string $client): ?string
+    {
+        $consolidatedPointsOfSale = [
+            'ISLA ALTO ROSARIO' => 'ALTO ROSARIO',
+            'ISLA FRAGANCIAS P.OLMOS' => 'PATIO OLMOS',
+            'ISLA NVO.CENTRO' => 'NUEVOCENTRO SHOPING',
+            'ISLA PASEO DEL SIGLO' => 'PASEO DEL SIGLO SHOPPING',
+        ];
+        if (isset($consolidatedPointsOfSale[$sucursal])) {
+            $sucursal = $consolidatedPointsOfSale[$sucursal];
+        }
+        $equivalence = EquivalenceDoors::where('client', $client)
+            ->where('sucursal', $sucursal)
+            ->first();
+
+        return $equivalence?->sucursal_objetivo_ba;
     }
 
     public function saveDetails($details, $objetive)
@@ -93,15 +130,6 @@ class NormalizeSellOutService
                 'quantity_secondary' => $detail['quantity2'],
             ]);
         }
-    }
-
-    public function saveObjetiveSelloutType($sellOut1, $sellOut2, $objetive)
-    {
-        $objetive->compare_period_sellout_type = $sellOut1->type;
-        $objetive->compare_period_secondary_sellout_type = $sellOut2->type;
-        $objetive->save();
-
-        return $objetive;
     }
 
     public function brandName($brand)
