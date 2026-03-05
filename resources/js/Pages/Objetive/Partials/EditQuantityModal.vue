@@ -26,13 +26,16 @@ const form = useForm({
   sellout_detail_id: props.id,
 });
 
-// Observa cambios en props y actualiza los valores en el formulario
+// Sincronizar el formulario con la fila cada vez que se abre el modal o cambian props
 watch(
-  () => [props.quantity, props.id],
-  ([newQuantity, newId]) => {
-    form.quantity = newQuantity;
-    form.sellout_detail_id = newId;
-  }
+  () => [props.show, props.quantity, props.id],
+  ([show, newQuantity, newId]) => {
+    if (show && props.id != null) {
+      form.quantity = newQuantity ?? 0;
+      form.sellout_detail_id = newId;
+    }
+  },
+  { immediate: true }
 );
 
 const saveQuantity = () => {
@@ -53,8 +56,7 @@ const emit = defineEmits(["close"]);
 
 const closeModal = () => {
   emit("close");
-
-  form.reset();
+  form.clearErrors();
 };
 
 </script>
