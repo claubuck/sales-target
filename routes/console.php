@@ -8,4 +8,4 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote')->hourly();
 
-Schedule::command('commercial:sync-from-drive')->monthlyOn(1, '02:00');
+Schedule::command('commercial:sync-from-drive')->monthlyOn(1, '08:00');
