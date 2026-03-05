@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use Inertia\Inertia;
 use App\Models\Brand;
-use App\Models\SellOut;
+use App\Models\CommercialRaw;
 use App\Models\Objetive;
 use Illuminate\Http\Request;
 use App\Models\SellOutDetail;
@@ -128,22 +128,26 @@ class ObjetiveController extends Controller
             $errors['period'] = 'Ya hay un objetivo con este perido.';
         }
 
-        // Verificar si el compare_period ya existe
-        $existsComparePeriod = SellOut::whereYear('period', Carbon::parse($request->input('compare_period'))->year)
-            ->whereMonth('period', Carbon::parse($request->input('compare_period'))->month)
+        // Verificar si hay datos en commercial_raw para compare_period
+        $dateCompare = Carbon::parse($request->input('compare_period'));
+        $mesAbbr = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'][$dateCompare->month - 1] ?? null;
+        $existsComparePeriod = $mesAbbr && CommercialRaw::where('ano', $dateCompare->year)
+            ->whereRaw('LOWER(mes) = ?', [strtolower($mesAbbr)])
             ->exists();
 
         if (!$existsComparePeriod) {
-            $errors['compare_period'] = 'Para el periodo seleccionado no hay un Sell Out cargado.';
+            $errors['compare_period'] = 'Para el periodo seleccionado no hay datos en crudo comercial. Ejecute "commercial:sync-from-drive" si es necesario.';
         }
 
-        // Verificar si el compare_period_secondary ya existe
-        $existsComparePeriodSecondary = SellOut::whereYear('period', Carbon::parse($request->input('compare_period_secondary'))->year)
-            ->whereMonth('period', Carbon::parse($request->input('compare_period_secondary'))->month)
+        // Verificar si hay datos en commercial_raw para compare_period_secondary
+        $dateCompareSecondary = Carbon::parse($request->input('compare_period_secondary'));
+        $mesAbbrSecondary = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'][$dateCompareSecondary->month - 1] ?? null;
+        $existsComparePeriodSecondary = $mesAbbrSecondary && CommercialRaw::where('ano', $dateCompareSecondary->year)
+            ->whereRaw('LOWER(mes) = ?', [strtolower($mesAbbrSecondary)])
             ->exists();
 
         if (!$existsComparePeriodSecondary) {
-            $errors['compare_period_secondary'] = 'Para el periodo seleccionado no hay un Sell Out cargado.';
+            $errors['compare_period_secondary'] = 'Para el periodo seleccionado no hay datos en crudo comercial. Ejecute "commercial:sync-from-drive" si es necesario.';
         }
 
         return $errors;
