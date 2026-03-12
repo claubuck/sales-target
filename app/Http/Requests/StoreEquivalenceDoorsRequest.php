@@ -11,7 +11,7 @@ class StoreEquivalenceDoorsRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,9 @@ class StoreEquivalenceDoorsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'client' => ['required', 'string', 'max:255'],
+            'sucursal' => ['required', 'string', 'min:1'],
+            'sucursal_objetivo_ba' => ['required', 'string', 'max:255'],
         ];
     }
 }

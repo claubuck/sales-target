@@ -3,8 +3,9 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-class UpdateEquivalenceDoorsRequest extends FormRequest
+class UpdateClientEquivalenceRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,9 +23,13 @@ class UpdateEquivalenceDoorsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'client' => ['required', 'string', 'max:255'],
-            'sucursal' => ['required', 'string', 'min:1'],
-            'sucursal_objetivo_ba' => ['required', 'string', 'max:255'],
+            'cliente_comercial' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('client_equivalences', 'cliente_comercial')->ignore($this->route('client')),
+            ],
+            'cliente_display' => ['required', 'string', 'max:255'],
         ];
     }
 }

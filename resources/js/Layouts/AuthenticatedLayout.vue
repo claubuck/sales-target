@@ -39,22 +39,22 @@ const showingNavigationDropdown = ref(false);
                   Dashboard
                 </NavLink>
                 <NavLink
-                  :href="route('sellout.index')"
-                  :active="route().current('sellout.index')"
-                >
-                  Reportes Sell Out
-                </NavLink>
-                <NavLink
                   :href="route('weighted-price.index')"
                   :active="route().current('weighted-price.index')"
                 >
                   Precio Ponderado
                 </NavLink>
                 <NavLink
-                  :href="route('sellout.comercial')"
-                  :active="route().current('sellout.comercial')"
+                  :href="route('doors.index')"
+                  :active="route().current('doors.index')"
                 >
-                  Reportes Sell Out Comercial
+                  Puertas
+                </NavLink>
+                <NavLink
+                  :href="route('clients.index')"
+                  :active="route().current('clients.*')"
+                >
+                  Clientes
                 </NavLink>
               </div>
             </div>
@@ -155,6 +155,24 @@ const showingNavigationDropdown = ref(false);
               :active="route().current('dashboard')"
             >
               Dashboard
+            </ResponsiveNavLink>
+            <ResponsiveNavLink
+              :href="route('weighted-price.index')"
+              :active="route().current('weighted-price.index')"
+            >
+              Precio Ponderado
+            </ResponsiveNavLink>
+            <ResponsiveNavLink
+              :href="route('doors.index')"
+              :active="route().current('doors.index')"
+            >
+              Puertas
+            </ResponsiveNavLink>
+            <ResponsiveNavLink
+              :href="route('clients.index')"
+              :active="route().current('clients.*')"
+            >
+              Clientes
             </ResponsiveNavLink>
           </div>
 

@@ -36,7 +36,7 @@ return [
     ],
 
     'google_drive' => [
-        'credentials' => env('GOOGLE_DRIVE_CREDENTIALS_PATH', storage_path('app/contarsis-6ef1e04512ed.json')),
+        'credentials' => env('GOOGLE_DRIVE_CREDENTIALS_PATH', storage_path('app/puig2026-9ad1aa33047d.json')),
         'commercial_file_id' => env('GOOGLE_DRIVE_COMMERCIAL_FILE_ID'),
     ],
 

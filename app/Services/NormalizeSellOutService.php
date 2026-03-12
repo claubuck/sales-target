@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\Brand;
 use App\Models\CommercialRaw;
 use App\Traits\ClientNameTrait;
+use App\Models\ClientEquivalence;
 use App\Models\EquivalenceDoors;
 
 class NormalizeSellOutService
@@ -40,80 +41,144 @@ class NormalizeSellOutService
         $rows1 = CommercialRaw::where('ano', $ano1)->whereRaw('LOWER(mes) = ?', [strtolower($mes1)])->get();
         $rows2 = CommercialRaw::where('ano', $ano2)->whereRaw('LOWER(mes) = ?', [strtolower($mes2)])->get();
 
+        // Una sola consulta: mapa cliente_comercial -> cliente_display (evita N+1)
+        $clientDisplayMap = ClientEquivalence::all()->keyBy('cliente_comercial')->map->cliente_display->toArray();
+
+        $toClientDisplay = function ($cliente) use ($clientDisplayMap) {
+            return $clientDisplayMap[$cliente] ?? $cliente;
+        };
+
+        // Preagregar por (client_display, sucursal_upper, brand) -> suma en un solo recorrido por periodo
+        $agg1 = $this->aggregateByClientSucursalBrand($rows1, $toClientDisplay);
+        $agg2 = $this->aggregateByClientSucursalBrand($rows2, $toClientDisplay);
+
         $combinedDetails = [];
+        $equivalences = EquivalenceDoors::all();
 
-        foreach ($rows1 as $row) {
-            if ($row->sucursal === null || $row->sucursal === '') {
-                continue;
-            }
-            $pointOfSale = $this->resolvePointOfSale($row->sucursal, $row->cliente);
-            if ($pointOfSale === null) {
-                continue;
-            }
-            $brand = $this->brandName($row->marca);
-            $clientShort = $this->nameClient($row->cliente);
-            $key = $brand . '|' . $pointOfSale . '|' . $clientShort;
-            if (! isset($combinedDetails[$key])) {
-                $combinedDetails[$key] = [
-                    'brand' => $brand,
-                    'point_of_sale' => $pointOfSale,
-                    'client' => $row->cliente,
-                    'quantity1' => 0,
-                    'quantity2' => null,
-                ];
-            }
-            $combinedDetails[$key]['quantity1'] += (float) $row->unidades;
-        }
+        foreach ($equivalences as $equivalence) {
+            $clientEquivalence = trim((string) $equivalence->client);
+            $clientDisplay = $toClientDisplay($clientEquivalence);
+            $sucursalesUpper = array_filter(array_map('mb_strtoupper', array_map('trim', explode(',', $equivalence->sucursal ?? ''))));
+            $pointOfSale = $equivalence->sucursal_objetivo_ba;
 
-        foreach ($rows2 as $row) {
-            if ($row->sucursal === null || $row->sucursal === '') {
+            if ($pointOfSale === null || $pointOfSale === '') {
                 continue;
             }
-            $pointOfSale = $this->resolvePointOfSale($row->sucursal, $row->cliente);
-            if ($pointOfSale === null) {
-                continue;
+
+            $byBrand1 = [];
+            $byBrand2 = [];
+            foreach ($sucursalesUpper as $suc) {
+                foreach ($agg1[$clientDisplay][$suc] ?? [] as $brand => $sum) {
+                    $byBrand1[$brand] = ($byBrand1[$brand] ?? 0) + $sum;
+                }
+                foreach ($agg2[$clientDisplay][$suc] ?? [] as $brand => $sum) {
+                    $byBrand2[$brand] = ($byBrand2[$brand] ?? 0) + $sum;
+                }
             }
-            $brand = $this->brandName($row->marca);
-            $clientShort = $this->nameClient($row->cliente);
-            $key = $brand . '|' . $pointOfSale . '|' . $clientShort;
-            if (! isset($combinedDetails[$key])) {
-                $combinedDetails[$key] = [
-                    'brand' => $brand,
-                    'point_of_sale' => $pointOfSale,
-                    'client' => $row->cliente,
-                    'quantity1' => null,
-                    'quantity2' => 0,
-                ];
+
+            $brandsFound = array_unique(array_merge(array_keys($byBrand1), array_keys($byBrand2)));
+            foreach ($brandsFound as $brand) {
+                $q1 = $byBrand1[$brand] ?? 0;
+                $q2 = $byBrand2[$brand] ?? 0;
+                if ($q1 == 0 && $q2 == 0) {
+                    continue;
+                }
+                $key = $brand . '|' . $pointOfSale . '|' . $clientDisplay;
+                if (! isset($combinedDetails[$key])) {
+                    $combinedDetails[$key] = [
+                        'brand' => $brand,
+                        'point_of_sale' => $pointOfSale,
+                        'client' => $clientEquivalence,
+                        'quantity1' => $q1,
+                        'quantity2' => $q2,
+                    ];
+                } else {
+                    $combinedDetails[$key]['quantity1'] += $q1;
+                    $combinedDetails[$key]['quantity2'] += $q2;
+                }
             }
-            $combinedDetails[$key]['quantity2'] = ($combinedDetails[$key]['quantity2'] ?? 0) + (float) $row->unidades;
         }
 
         $this->saveDetails(collect($combinedDetails)->values(), $objetive);
         $this->completeMissingPointOfSale($objetive);
     }
 
+    /**
+     * Agrega filas de commercial_raw por (client_display, sucursal_upper, brand) -> suma unidades.
+     * Un solo recorrido, sin consultas a BD.
+     */
+    protected function aggregateByClientSucursalBrand($rows, callable $toClientDisplay): array
+    {
+        $agg = [];
+        foreach ($rows as $r) {
+            if ($r->sucursal === null || $r->sucursal === '' || $r->marca === null || $r->marca === '') {
+                continue;
+            }
+            $clientDisplay = $toClientDisplay($r->cliente);
+            $sucursalUpper = mb_strtoupper(trim($r->sucursal));
+            $brand = $this->brandName($r->marca);
+            if (! isset($agg[$clientDisplay][$sucursalUpper][$brand])) {
+                $agg[$clientDisplay][$sucursalUpper][$brand] = 0;
+            }
+            $agg[$clientDisplay][$sucursalUpper][$brand] += (float) $r->unidades;
+        }
+        return $agg;
+    }
+
+    /**
+     * Resuelve sucursal comercial + cliente al punto de venta a mostrar (sucursal_objetivo_ba).
+     * Usa solo la tabla equivalence_doors: las sucursales que suman a una misma puerta están en la
+     * columna sucursal separadas por coma (ej. "PASEO DEL SIGLO SHOPPING, ISLA PASEO DEL SIGLO").
+     * Si la sucursal del comercial está en esa lista, se devuelve el sucursal_objetivo_ba de esa fila.
+     */
     protected function resolvePointOfSale(string $sucursal, string $client): ?string
     {
-        $consolidatedPointsOfSale = [
-            'ISLA ALTO ROSARIO' => 'ALTO ROSARIO',
-            'ISLA FRAGANCIAS P.OLMOS' => 'PATIO OLMOS',
-            'ISLA NVO.CENTRO' => 'NUEVOCENTRO SHOPING',
-            'ISLA PASEO DEL SIGLO' => 'PASEO DEL SIGLO SHOPPING',
-        ];
-        if (isset($consolidatedPointsOfSale[$sucursal])) {
-            $sucursal = $consolidatedPointsOfSale[$sucursal];
+        $sucursal = trim($sucursal);
+        if ($sucursal === '') {
+            return null;
         }
+
+        $sucursalUpper = mb_strtoupper($sucursal);
+
+        // 1) Coincidencia exacta: una sola sucursal por fila (client, sucursal, sucursal_objetivo_ba)
         $equivalence = EquivalenceDoors::where('client', $client)
             ->where('sucursal', $sucursal)
             ->first();
 
-        return $equivalence?->sucursal_objetivo_ba;
+        if ($equivalence) {
+            return $equivalence->sucursal_objetivo_ba;
+        }
+
+        // Si no hay filas por cliente comercial, probar por nombre a mostrar
+        $rows = EquivalenceDoors::where('client', $client)->get();
+        if ($rows->isEmpty()) {
+            $clientDisplay = $this->nameClient($client);
+            if ($clientDisplay !== $client) {
+                $rows = EquivalenceDoors::where('client', $clientDisplay)->get();
+            }
+        }
+
+        // 2) Buscar en filas donde sucursal es lista separada por coma ("Ecommerce, ARCOS", "PASEO DEL SIGLO SHOPPING, ISLA PASEO DEL SIGLO", etc.)
+        foreach ($rows as $row) {
+            $sucursalesEnFila = array_map('trim', explode(',', $row->sucursal ?? ''));
+            foreach ($sucursalesEnFila as $s) {
+                if ($s !== '' && mb_strtoupper($s) === $sucursalUpper) {
+                    return $row->sucursal_objetivo_ba;
+                }
+            }
+        }
+
+        return null;
     }
 
     public function saveDetails($details, $objetive)
     {
         // Guarda los detalles en la base de datos
         foreach ($details as $detail) {
+            $brand = $detail['brand'] ?? null;
+            if ($brand === null || $brand === '') {
+                continue;
+            }
             // Verifica si el punto de venta existe en EquivalenceDoors
             $exists = EquivalenceDoors::where('sucursal_objetivo_ba', $detail['point_of_sale'])->exists();
 
@@ -123,7 +188,7 @@ class NormalizeSellOutService
             }
 
             $objetive->objetiveDetails()->create([
-                'brand' => $detail['brand'],
+                'brand' => $brand,
                 'point_of_sale' => $detail['point_of_sale'],
                 'client' => $this->nameClient($detail['client']),
                 'quantity' => $detail['quantity1'],
@@ -145,21 +210,11 @@ class NormalizeSellOutService
 
     public function completeMissingPointOfSale($objetive)
     {
-        // Define las relaciones cliente -> equivalencia de cliente
-        $clients = [
-            'ROUGE' => 'GRUPO ROUGE',
-            'JULERIAQUE' => 'JULERIAQUE',
-            'PIGMENTO' => 'PERFUGRUP',
-            'PARFUMERIE' => 'CORTASSA',
-            'DUTY PAID' => 'DUTY PAID',
-            'GTL' => 'FARMACITY',
-            'FIORANI' => 'FREE SHOP',
-            'EL BALCON' => 'PLEYADE',
-            'SALVADO' => 'SALVADO HNOS',
-            // Agrega más clientes y equivalencias aquí
-        ];
+        $equivalences = ClientEquivalence::all();
 
-        foreach ($clients as $client => $equivalenceClient) {
+        foreach ($equivalences as $row) {
+            $client = $row->cliente_display;
+            $equivalenceClient = $row->cliente_comercial;
             // Obtén las marcas asociadas al cliente
             $brands = Brand::pluck('name')->toArray();
 
