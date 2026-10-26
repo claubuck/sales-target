@@ -38,7 +38,7 @@ class CommercialRawImport implements ToModel, WithHeadingRow, WithBatchInserts, 
             'marca' => $marca !== null && $marca !== '' ? (string) $marca : null,
             'cliente' => $cliente !== null && $cliente !== '' ? (string) $cliente : null,
             'sucursal' => $sucursal !== null && $sucursal !== '' ? (string) $sucursal : null,
-            'unidades' => is_numeric($unidades) ? (float) $unidades : 0,
+            'unidades' => $this->parseUnits($unidades),
             'imported_at' => $this->importedAt ?? now(),
         ]);
     }
@@ -51,6 +51,19 @@ class CommercialRawImport implements ToModel, WithHeadingRow, WithBatchInserts, 
     public function chunkSize(): int
     {
         return 1000;
+    }
+
+    /**
+     * El CSV del Drive mezcla numeros simples ("4", "-2") con formato argentino
+     * ("4,000", "1.098,00"): si hay coma, el punto es de miles y la coma es decimal.
+     */
+    private function parseUnits(mixed $value): float
+    {
+        if (is_string($value) && str_contains($value, ',')) {
+            $value = str_replace(',', '.', str_replace('.', '', trim($value)));
+        }
+
+        return is_numeric($value) ? (float) $value : 0;
     }
 
     /**
