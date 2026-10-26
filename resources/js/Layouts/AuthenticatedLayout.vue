@@ -39,10 +39,22 @@ const showingNavigationDropdown = ref(false);
                   Dashboard
                 </NavLink>
                 <NavLink
+                  :href="route('sellout.index')"
+                  :active="route().current('sellout.index')"
+                >
+                  Reportes Sell Out
+                </NavLink>
+                <NavLink
                   :href="route('weighted-price.index')"
                   :active="route().current('weighted-price.index')"
                 >
                   Precio Ponderado
+                </NavLink>
+                <NavLink
+                  :href="route('sellout.comercial')"
+                  :active="route().current('sellout.comercial')"
+                >
+                  Reportes Sell Out Comercial
                 </NavLink>
                 <template v-if="$page.props.auth.user.is_superadmin">
                   <NavLink
@@ -159,10 +171,22 @@ const showingNavigationDropdown = ref(false);
               Dashboard
             </ResponsiveNavLink>
             <ResponsiveNavLink
+              :href="route('sellout.index')"
+              :active="route().current('sellout.index')"
+            >
+              Reportes Sell Out
+            </ResponsiveNavLink>
+            <ResponsiveNavLink
               :href="route('weighted-price.index')"
               :active="route().current('weighted-price.index')"
             >
               Precio Ponderado
+            </ResponsiveNavLink>
+            <ResponsiveNavLink
+              :href="route('sellout.comercial')"
+              :active="route().current('sellout.comercial')"
+            >
+              Reportes Sell Out Comercial
             </ResponsiveNavLink>
             <template v-if="$page.props.auth.user.is_superadmin">
               <ResponsiveNavLink
