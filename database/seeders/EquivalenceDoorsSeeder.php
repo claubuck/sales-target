@@ -15,6 +15,13 @@ class EquivalenceDoorsSeeder extends Seeder
      */
     public function run(): void
     {
+        // Las puertas ahora se administran desde la pantalla "Puertas": no pisar lo cargado ahi.
+        // Este seeder solo sirve para una base vacia.
+        if (DB::table('equivalence_doors')->exists()) {
+            $this->command?->warn('equivalence_doors ya tiene datos; se omite para no borrar lo cargado desde la pantalla de Puertas.');
+            return;
+        }
+
         // Limpia la tabla antes de cargar nuevos datos
         DB::table('equivalence_doors')->truncate();
         

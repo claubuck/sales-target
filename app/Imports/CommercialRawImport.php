@@ -3,6 +3,7 @@
 namespace App\Imports;
 
 use App\Models\CommercialRaw;
+use Illuminate\Support\Carbon;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
@@ -10,6 +11,13 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class CommercialRawImport implements ToModel, WithHeadingRow, WithBatchInserts, WithChunkReading
 {
+    /**
+     * Marca comun para todas las filas de una importacion; permite saber que filas son nuevas.
+     */
+    public function __construct(protected ?Carbon $importedAt = null)
+    {
+    }
+
     public function model(array $row): ?CommercialRaw
     {
         $ano = $this->getValue($row, ['año', 'ano', 'anio']);
@@ -17,7 +25,8 @@ class CommercialRawImport implements ToModel, WithHeadingRow, WithBatchInserts, 
         $marca = $this->getValue($row, ['marca']);
         $cliente = $this->getValue($row, ['cliente']);
         $sucursal = $this->getValue($row, ['sucursal']);
-        $unidades = $this->getValue($row, ['unidades']);
+        // El reporte comercial trae la columna "Sum(Unidades)", que WithHeadingRow convierte en "sumunidades"
+        $unidades = $this->getValue($row, ['unidades', 'sumunidades']);
 
         if ($ano === null && $mes === null && $marca === null && $cliente === null && $sucursal === null && $unidades === null) {
             return null;
@@ -30,7 +39,7 @@ class CommercialRawImport implements ToModel, WithHeadingRow, WithBatchInserts, 
             'cliente' => $cliente !== null && $cliente !== '' ? (string) $cliente : null,
             'sucursal' => $sucursal !== null && $sucursal !== '' ? (string) $sucursal : null,
             'unidades' => is_numeric($unidades) ? (float) $unidades : 0,
-            'imported_at' => now(),
+            'imported_at' => $this->importedAt ?? now(),
         ]);
     }
 

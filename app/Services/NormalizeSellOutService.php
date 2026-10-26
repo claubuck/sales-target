@@ -54,6 +54,8 @@ class NormalizeSellOutService
 
         $combinedDetails = [];
         $equivalences = EquivalenceDoors::all();
+        // Evita sumar dos veces la misma sucursal en la misma puerta (filas duplicadas en equivalence_doors)
+        $seenSucursales = [];
 
         foreach ($equivalences as $equivalence) {
             $clientEquivalence = trim((string) $equivalence->client);
@@ -68,6 +70,12 @@ class NormalizeSellOutService
             $byBrand1 = [];
             $byBrand2 = [];
             foreach ($sucursalesUpper as $suc) {
+                $seenKey = $clientDisplay . '|' . $suc . '|' . $pointOfSale;
+                if (isset($seenSucursales[$seenKey])) {
+                    continue;
+                }
+                $seenSucursales[$seenKey] = true;
+
                 foreach ($agg1[$clientDisplay][$suc] ?? [] as $brand => $sum) {
                     $byBrand1[$brand] = ($byBrand1[$brand] ?? 0) + $sum;
                 }
@@ -114,9 +122,10 @@ class NormalizeSellOutService
             if ($r->sucursal === null || $r->sucursal === '' || $r->marca === null || $r->marca === '') {
                 continue;
             }
-            $clientDisplay = $toClientDisplay($r->cliente);
+            $clientDisplay = $toClientDisplay(trim((string) $r->cliente));
             $sucursalUpper = mb_strtoupper(trim($r->sucursal));
-            $brand = $this->brandName($r->marca);
+            // El crudo trae marcas en minuscula ("Nina Ricci"); el resto del sistema usa mayusculas
+            $brand = $this->brandName(mb_strtoupper(trim($r->marca)));
             if (! isset($agg[$clientDisplay][$sucursalUpper][$brand])) {
                 $agg[$clientDisplay][$sucursalUpper][$brand] = 0;
             }

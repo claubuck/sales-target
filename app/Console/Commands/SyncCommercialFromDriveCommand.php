@@ -37,14 +37,35 @@ class SyncCommercialFromDriveCommand extends Command
             $tempPath = $drive->downloadFile($fileId);
             $this->info('Downloaded to: ' . $tempPath);
 
-            $this->info('Truncating commercial_raw table...');
-            DB::table('commercial_raw')->truncate();
+            // El archivo del Drive trae solo los meses recientes: se reemplazan esos meses
+            // y se conserva el historial. Todo en una transaccion para no dejar datos a medias.
+            $importedAt = now()->startOfSecond();
 
-            $this->info('Importing rows...');
-            Excel::import(new CommercialRawImport, $tempPath);
+            $replacedMonths = DB::transaction(function () use ($tempPath, $importedAt) {
+                $this->info('Importing rows...');
+                Excel::import(new CommercialRawImport($importedAt), $tempPath);
+
+                $months = CommercialRaw::where('imported_at', $importedAt)
+                    ->select('ano', 'mes')
+                    ->distinct()
+                    ->get();
+
+                foreach ($months as $month) {
+                    $deleted = CommercialRaw::where('ano', $month->ano)
+                        ->whereRaw('LOWER(mes) = ?', [mb_strtolower((string) $month->mes)])
+                        ->where(function ($query) use ($importedAt) {
+                            $query->whereNull('imported_at')->orWhere('imported_at', '!=', $importedAt);
+                        })
+                        ->delete();
+
+                    $this->line("  {$month->ano}-{$month->mes}: {$deleted} filas anteriores reemplazadas");
+                }
+
+                return $months->count();
+            });
 
             $count = CommercialRaw::count();
-            $this->info("Import completed. Total rows in commercial_raw: {$count}");
+            $this->info("Import completed. Months replaced: {$replacedMonths}. Total rows in commercial_raw: {$count}");
 
             return self::SUCCESS;
         } catch (\Throwable $e) {
