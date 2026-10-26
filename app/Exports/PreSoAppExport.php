@@ -101,17 +101,22 @@ class PreSoAppExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
 
                 // Iteramos cada fila dentro del grupo para asignar cantidades a la marca correspondiente
                 foreach ($rows as $detail) {
-                    // Verificar si la marca existe en el array antes de asignar
-                    if (isset($row[$detail->brand])) {
-                        $row[$detail->brand] = $detail->quantity_with_percentage;
-                        $row['TOTAL UNIDADES'] += $detail->quantity_with_percentage;
-                        $row['TOTAL FACTURACION'] += $detail->price;
-
-                        // Sumar al subtotal de la marca y totales
-                        $subtotalRow[$detail->brand] += $detail->quantity_with_percentage;
-                        $subtotalRow['TOTAL UNIDADES'] += $detail->quantity_with_percentage;
-                        $subtotalRow['TOTAL FACTURACION'] += $detail->price;
+                    // Saltar marcas no definidas o la columna especial DISTRIBUTED BRANDS
+                    if (!isset($row[$detail->brand]) || $detail->brand === 'DISTRIBUTED BRANDS') {
+                        continue;
                     }
+
+                    $quantity = (float) ($detail->quantity_with_percentage ?? 0);
+                    $price = (float) ($detail->price ?? 0);
+
+                    $row[$detail->brand] = $detail->quantity_with_percentage;
+                    $row['TOTAL UNIDADES'] += $quantity;
+                    $row['TOTAL FACTURACION'] += $price;
+
+                    // Sumar al subtotal de la marca y totales
+                    $subtotalRow[$detail->brand] += $quantity;
+                    $subtotalRow['TOTAL UNIDADES'] += $quantity;
+                    $subtotalRow['TOTAL FACTURACION'] += $price;
                 }
 
                 // Formateamos 'TOTAL FACTURACION' sin decimales
