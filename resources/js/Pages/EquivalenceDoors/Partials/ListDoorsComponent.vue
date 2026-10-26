@@ -16,7 +16,18 @@
           </Link>
         </div>
       </div>
-      <div class="mt-8 flow-root">
+      <div class="mt-6 sm:flex sm:items-center sm:justify-between">
+        <input
+          v-model="search"
+          type="text"
+          placeholder="Buscar por cliente, sucursal o puerta..."
+          class="block w-full sm:max-w-md rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+        />
+        <p class="mt-2 sm:mt-0 text-sm text-gray-500">
+          {{ filteredDoors.length }} de {{ doors.length }} puertas
+        </p>
+      </div>
+      <div class="mt-4 flow-root">
         <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
           <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
             <table class="min-w-full divide-y divide-gray-300">
@@ -37,7 +48,12 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-200">
-                <tr v-for="door in doors" :key="door.id">
+                <tr v-if="filteredDoors.length === 0">
+                  <td colspan="4" class="py-4 text-sm text-gray-500 text-center">
+                    No hay puertas que coincidan con la búsqueda.
+                  </td>
+                </tr>
+                <tr v-for="door in filteredDoors" :key="door.id">
                   <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
                     {{ door.client }}
                   </td>
@@ -86,9 +102,30 @@
   <script setup>
   import { Link, router } from "@inertiajs/vue3";
   import { PencilIcon, TrashIcon } from "@heroicons/vue/24/solid";
-  
-  defineProps({
+  import { ref, computed } from "vue";
+
+  const props = defineProps({
     doors: Object,
+  });
+
+  const search = ref("");
+
+  // Sin mayusculas ni acentos: "cordoba" encuentra "Córdoba"
+  const normalize = (value) =>
+    String(value ?? "")
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLowerCase();
+
+  // Todas las palabras buscadas tienen que aparecer en cliente, sucursal o puerta
+  const filteredDoors = computed(() => {
+    const words = normalize(search.value).split(/\s+/).filter(Boolean);
+    if (!words.length) return props.doors;
+
+    return props.doors.filter((door) => {
+      const text = normalize(`${door.client} ${door.sucursal} ${door.sucursal_objetivo_ba}`);
+      return words.every((word) => text.includes(word));
+    });
   });
 
   function confirmDelete(door) {
