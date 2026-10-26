@@ -59,14 +59,16 @@ class BackfillCommercialFromSellOutsCommand extends Command
                 continue;
             }
 
-            // Mismo criterio que usaba NormalizeSellOutService antes del refactor
+            // Prioriza el comercial y, si hay varios del mismo mes, el ultimo subido
+            // (ej. junio 2024: el #51 corrige al #32)
             $sellOut = SellOut::whereYear('period', $period->y)
                 ->whereMonth('period', $period->m)
                 ->orderByRaw("CASE WHEN type = 'sellout_commercial' THEN 1 WHEN type = 'sellout' THEN 2 ELSE 3 END")
+                ->orderByDesc('id')
                 ->first();
 
             if ($period->total > 1) {
-                $this->warn("{$label}: hay {$period->total} Sell Out cargados para este mes; se usa el #{$sellOut->id} ({$sellOut->type}), como antes del refactor. Revisar.");
+                $this->warn("{$label}: hay {$period->total} Sell Out cargados para este mes; se usa el ultimo subido, #{$sellOut->id} ({$sellOut->type}).");
             } elseif ($sellOut->type !== 'sellout_commercial') {
                 $this->warn("{$label}: el Sell Out #{$sellOut->id} es de tipo {$sellOut->type}, no comercial. Revisar.");
             }
