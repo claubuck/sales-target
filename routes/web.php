@@ -66,21 +66,24 @@ Route::middleware('auth')->group(function () {
     Route::get('/so-app/export/{id}', [ExportSoAppController::class, 'export'])->name('soapp.export');
     Route::get('/so-app/export-borrador/{id}', [ExportSoAppController::class, 'exportBorrador'])->name('soapp.export-borrador');
 
-    //Puertas
-    Route::get('doors', [EquivalenceDoorsController::class, 'index'])->name('doors.index');
-    Route::get('doors/create', [EquivalenceDoorsController::class, 'create'])->name('doors.create');
-    Route::post('doors', [EquivalenceDoorsController::class, 'store'])->name('doors.store');
-    Route::get('doors/{equivalenceDoors}/edit', [EquivalenceDoorsController::class, 'edit'])->name('doors.edit');
-    Route::put('doors/{equivalenceDoors}', [EquivalenceDoorsController::class, 'update'])->name('doors.update');
-    Route::delete('doors/{equivalenceDoors}', [EquivalenceDoorsController::class, 'destroy'])->name('doors.destroy');
+    // Puertas y Clientes: solo superadmin
+    Route::middleware('superadmin')->group(function () {
+        //Puertas
+        Route::get('doors', [EquivalenceDoorsController::class, 'index'])->name('doors.index');
+        Route::get('doors/create', [EquivalenceDoorsController::class, 'create'])->name('doors.create');
+        Route::post('doors', [EquivalenceDoorsController::class, 'store'])->name('doors.store');
+        Route::get('doors/{equivalenceDoors}/edit', [EquivalenceDoorsController::class, 'edit'])->name('doors.edit');
+        Route::put('doors/{equivalenceDoors}', [EquivalenceDoorsController::class, 'update'])->name('doors.update');
+        Route::delete('doors/{equivalenceDoors}', [EquivalenceDoorsController::class, 'destroy'])->name('doors.destroy');
 
-    // Clientes (equivalencias comercial -> nombre a mostrar)
-    Route::get('clients', [ClientEquivalenceController::class, 'index'])->name('clients.index');
-    Route::get('clients/create', [ClientEquivalenceController::class, 'create'])->name('clients.create');
-    Route::post('clients', [ClientEquivalenceController::class, 'store'])->name('clients.store');
-    Route::get('clients/{client}/edit', [ClientEquivalenceController::class, 'edit'])->name('clients.edit');
-    Route::put('clients/{client}', [ClientEquivalenceController::class, 'update'])->name('clients.update');
-    Route::delete('clients/{client}', [ClientEquivalenceController::class, 'destroy'])->name('clients.destroy');
+        // Clientes (equivalencias comercial -> nombre a mostrar)
+        Route::get('clients', [ClientEquivalenceController::class, 'index'])->name('clients.index');
+        Route::get('clients/create', [ClientEquivalenceController::class, 'create'])->name('clients.create');
+        Route::post('clients', [ClientEquivalenceController::class, 'store'])->name('clients.store');
+        Route::get('clients/{client}/edit', [ClientEquivalenceController::class, 'edit'])->name('clients.edit');
+        Route::put('clients/{client}', [ClientEquivalenceController::class, 'update'])->name('clients.update');
+        Route::delete('clients/{client}', [ClientEquivalenceController::class, 'destroy'])->name('clients.destroy');
+    });
 });
 
 require __DIR__.'/auth.php';

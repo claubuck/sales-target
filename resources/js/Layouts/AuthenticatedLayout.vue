@@ -44,18 +44,20 @@ const showingNavigationDropdown = ref(false);
                 >
                   Precio Ponderado
                 </NavLink>
-                <NavLink
-                  :href="route('doors.index')"
-                  :active="route().current('doors.index')"
-                >
-                  Puertas
-                </NavLink>
-                <NavLink
-                  :href="route('clients.index')"
-                  :active="route().current('clients.*')"
-                >
-                  Clientes
-                </NavLink>
+                <template v-if="$page.props.auth.user.is_superadmin">
+                  <NavLink
+                    :href="route('doors.index')"
+                    :active="route().current('doors.index')"
+                  >
+                    Puertas
+                  </NavLink>
+                  <NavLink
+                    :href="route('clients.index')"
+                    :active="route().current('clients.*')"
+                  >
+                    Clientes
+                  </NavLink>
+                </template>
               </div>
             </div>
 
@@ -162,18 +164,20 @@ const showingNavigationDropdown = ref(false);
             >
               Precio Ponderado
             </ResponsiveNavLink>
-            <ResponsiveNavLink
-              :href="route('doors.index')"
-              :active="route().current('doors.index')"
-            >
-              Puertas
-            </ResponsiveNavLink>
-            <ResponsiveNavLink
-              :href="route('clients.index')"
-              :active="route().current('clients.*')"
-            >
-              Clientes
-            </ResponsiveNavLink>
+            <template v-if="$page.props.auth.user.is_superadmin">
+              <ResponsiveNavLink
+                :href="route('doors.index')"
+                :active="route().current('doors.index')"
+              >
+                Puertas
+              </ResponsiveNavLink>
+              <ResponsiveNavLink
+                :href="route('clients.index')"
+                :active="route().current('clients.*')"
+              >
+                Clientes
+              </ResponsiveNavLink>
+            </template>
           </div>
 
           <!-- Responsive Settings Options -->
